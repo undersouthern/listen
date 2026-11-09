@@ -3,35 +3,60 @@ export default {
     const url = new URL(request.url);
     let pathname = url.pathname;
 
+    // Chuẩn hóa root path
     if (pathname === "/" || pathname === "") {
       pathname = "/index.html";
     }
 
-    // Kéo file trực tiếp từ repo GitHub listen
+    // Đảm bảo pathname luôn bắt đầu bằng dấu /
+    if (!pathname.startsWith("/")) {
+      pathname = "/" + pathname;
+    }
+
+    // URL file raw từ GitHub repository listen
     const githubRawUrl = `https://raw.githubusercontent.com/undersouthern/listen/main${pathname}`;
 
-    const response = await fetch(githubRawUrl);
+    const response = await fetch(githubRawUrl, {
+      headers: {
+        "User-Agent": "Cloudflare-Worker"
+      }
+    });
 
     if (!response.ok) {
-      return new Response("Not Found", { status: 404 });
+      return new Response(`File not found: ${pathname}`, { 
+        status: 404,
+        headers: { "Content-Type": "text/plain; charset=UTF-8" }
+      });
     }
 
-    const newHeaders = new Headers(response.headers);
+    // Xác định chính xác Content-Type cho từng loại file
+    const headers = new Headers();
+    headers.set("Access-Control-Allow-Origin", "*");
+    headers.set("Cache-Control", "public, max-age=300"); // Cache 5 phút
+
     if (pathname.endsWith(".html")) {
-      newHeaders.set("Content-Type", "text/html; charset=UTF-8");
-    } else if (pathname.endsWith(".png")) {
-      newHeaders.set("Content-Type", "image/png");
+      headers.set("Content-Type", "text/html; charset=UTF-8");
     } else if (pathname.endsWith(".css")) {
-      newHeaders.set("Content-Type", "text/css; charset=UTF-8");
+      headers.set("Content-Type", "text/css; charset=UTF-8");
     } else if (pathname.endsWith(".js")) {
-      newHeaders.set("Content-Type", "application/javascript; charset=UTF-8");
+      headers.set("Content-Type", "application/javascript; charset=UTF-8");
+    } else if (pathname.endsWith(".png")) {
+      headers.set("Content-Type", "image/png");
+    } else if (pathname.endsWith(".jpg") || pathname.endsWith(".jpeg")) {
+      headers.set("Content-Type", "image/jpeg");
+    } else if (pathname.endsWith(".svg")) {
+      headers.set("Content-Type", "image/svg+xml");
+    } else if (pathname.endsWith(".json")) {
+      headers.set("Content-Type", "application/json; charset=UTF-8");
+    } else {
+      // Giữ nguyên content-type gốc nếu là file khác
+      const originType = response.headers.get("Content-Type");
+      if (originType) headers.set("Content-Type", originType);
     }
-
-    newHeaders.set("Cache-Control", "public, max-age=60");
 
     return new Response(response.body, {
-      status: response.status,
-      headers: newHeaders,
+      status: 200,
+      headers: headers,
     });
   },
 };
