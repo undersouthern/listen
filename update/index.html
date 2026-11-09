@@ -493,7 +493,7 @@
         const div = document.createElement('div');
         div.className = 'release-item';
 
-        // Tự động bóc tách Title và Artist nếu title lưu theo định dạng "Title - Artist"
+        // Bóc tách Title và Artist nếu lưu theo định dạng "Title - Artist"
         let trackTitle = item.title || "";
         let trackArtist = "";
         if (trackTitle.includes(" - ")) {
@@ -502,6 +502,7 @@
           trackArtist = parts.slice(1).join(" - ").trim();
         }
 
+        // Hiển thị đầy đủ domain kết hợp với url_release
         div.innerHTML = `
           <div class="release-info">
             <div class="release-title-row"><strong>Title:</strong> ${trackTitle}</div>
