@@ -1,1 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Smart-Link Setup | UNDERSOUTHERN</title>
 
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/undersouthern/my-images/main/logo-black.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      background-color: #f4f6f8;
+      color: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      padding: 30px 20px;
+    }
+
+    .setup-layout {
+      display: flex;
+      width: 100%;
+      max-width: 1150px;
+      gap: 35px;
+      align-items: flex-start;
+    }
+
+    /* Left Column: Form Setup */
+    .setup-form-container {
+      flex: 1;
+      background: #ffffff;
+      border: 1px solid #e1e4e8;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .form-header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 4px;
+    }
+
+    .form-header p {
+      font-size: 0.84rem;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      margin: 22px 0 12px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+      font-weight: 700;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.81rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      background: #fafbfc;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      color: #111;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      border-color: #7c3aed;
+      background: #fff;
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 11px;
+      background: #7c3aed;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.15s;
+    }
+
+    .save-btn:hover {
+      background: #6d28d9;
+    }
+
+    /* Right Column: Phone Preview Frame */
+    .preview-panel {
+      width: 360px;
+      position: sticky;
+      top: 30px;
+      background: #ffffff;
+      border: 1px solid #e1e4e8;
+      border-radius: 10px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .preview-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #555;
+      width: 100%;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .phone-mockup {
+      width: 290px;
+      height: 570px;
+      background: #121214;
+      border-radius: 36px;
+      border: 8px solid #222;
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .phone-mockup::-webkit-scrollbar {
+      width: 4px;
+    }
+    .phone-mockup::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 4px;
+    }
+
+    .phone-cover-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1/1;
+      background: #000;
+    }
+
+    .phone-cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .phone-track-info {
+      background: #2b2b2b;
+      padding: 10px 12px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .phone-track-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .phone-platforms {
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .phone-brand-wrap {
+      display: flex;
+      align-items: center;
+      height: 22px;
+    }
+
+    .phone-logo-img {
+      max-height: 20px;
+      max-width: 110px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    .phone-play-btn {
+      padding: 4px 14px;
+      background: #ffffff;
+      border: 1px solid #d5d7dc;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #555;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="setup-layout">
+    
+    <!-- LEFT: SETUP FORM -->
+    <div class="setup-form-container">
+      <div class="form-header">
+        <h1>Smart-Link Setup</h1>
+        <p>Set your Smart Link URL, cover image, title, and platform destinations</p>
+      </div>
+
+      <form id="smartlink-form">
+        <div class="section-title">General Information</div>
+
+        <div class="form-group">
+          <label class="form-label">ID Title</label>
+          <input type="text" class="form-input" id="input-id-title">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" class="form-input" id="input-title">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Artist</label>
+          <input type="text" class="form-input" id="input-artist">
+        </div>
+
+        <div class="section-title">Streaming Destinations</div>
+
+        <div class="form-group">
+          <label class="form-label">Spotify URL</label>
+          <input type="text" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Apple Music URL</label>
+          <input type="text" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Amazon Music URL</label>
+          <input type="text" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">SoundCloud URL</label>
+          <input type="text" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Deezer URL</label>
+          <input type="text" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">YouTube URL</label>
+          <input type="text" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">YouTube Music URL</label>
+          <input type="text" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Zing MP3 URL</label>
+          <input type="text" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">NhacCuaTui URL</label>
+          <input type="text" class="form-input">
+        </div>
+
+        <div class="section-title">Landing Page Custom URL</div>
+        <div class="form-group">
+          <label class="form-label">URL Landing Page</label>
+          <input type="text" class="form-input">
+        </div>
+
+        <button type="submit" class="save-btn">Save Smart Link</button>
+      </form>
+    </div>
+
+    <!-- RIGHT: PHONE PREVIEW -->
+    <div class="preview-panel">
+      <div class="preview-title">
+        <span>Preview</span>
+        <span style="font-size: 0.75rem; color: #888;">(Mobile View)</span>
+      </div>
+
+      <div class="phone-mockup">
+        <div class="phone-cover-box">
+          <img class="phone-cover-img" alt="Cover">
+        </div>
+        <div class="phone-track-info">
+          <div class="phone-track-name" id="preview-track-title"></div>
+        </div>
+        <div class="phone-platforms" id="preview-platforms-list">
+          <!-- Render chuẩn logo từ thư mục assets -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Khai báo danh sách logo nền tảng từ thư mục assets
+    const PREVIEW_PLATFORMS = [
+      { name: "Spotify", logo: "assets/logo-spotify.png" },
+      { name: "Apple Music", logo: "assets/logo-apple-music.png" },
+      { name: "Amazon Music", logo: "assets/logo-amazon-music.png" },
+      { name: "SoundCloud", logo: "assets/logo-soundcloud.png" },
+      { name: "Deezer", logo: "assets/logo-deezer.png" },
+      { name: "YouTube", logo: "assets/logo-youtube.png" },
+      { name: "YouTube Music", logo: "assets/logo-youtube-music.png" },
+      { name: "Zing MP3", logo: "assets/logo-zingmp3.png" },
+      { name: "NhacCuaTui", logo: "assets/logo-nct.png" }
+    ];
+
+    const platformsContainer = document.getElementById('preview-platforms-list');
+    PREVIEW_PLATFORMS.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'phone-row';
+      row.innerHTML = `
+        <div class="phone-brand-wrap">
+          <img src="${item.logo}" alt="${item.name}" class="phone-logo-img">
+        </div>
+        <button class="phone-play-btn" type="button">Play</button>
+      `;
+      platformsContainer.appendChild(row);
+    });
+
+    const titleInput = document.getElementById('input-title');
+    const previewTitle = document.getElementById('preview-track-title');
+
+    titleInput.addEventListener('input', function() {
+      previewTitle.textContent = this.value;
+    });
+  </script>
+</body>
+</html>
