@@ -16,8 +16,11 @@ export default {
         const headers = new Headers();
         headers.set("Access-Control-Allow-Origin", "*");
         headers.set("Cache-Control", "public, max-age=31536000"); // Cache ảnh 1 năm
+        
         if (object.httpMetadata && object.httpMetadata.contentType) {
           headers.set("Content-Type", object.httpMetadata.contentType);
+        } else {
+          headers.set("Content-Type", "image/jpeg");
         }
 
         return new Response(object.body, { headers });
@@ -45,14 +48,18 @@ export default {
         const url_zingmp3 = formData.get("url_zingmp3");
         const url_nct = formData.get("url_nct");
 
-        // Xử lý upload file ảnh trực tiếp vào R2 bucket (artwork-landing-page)
+        // Xử lý upload file ảnh vào R2 bucket bằng ArrayBuffer và tạo đúng định dạng đường dẫn tuyệt đối
         let cover_url = "";
         const coverImage = formData.get("cover_image");
         if (coverImage && typeof coverImage === "object" && coverImage.size > 0) {
           const fileName = `covers/${Date.now()}-${coverImage.name}`;
-          await env.MY_BUCKET.put(fileName, coverImage, {
+          const arrayBuffer = await coverImage.arrayBuffer();
+          
+          await env.MY_BUCKET.put(fileName, arrayBuffer, {
             httpMetadata: { contentType: coverImage.type }
           });
+          
+          // Đường dẫn tuyệt đối chuẩn xác để Worker tự bắt route /covers/...
           cover_url = `https://listen.undersouthern.asia/${fileName}`;
         }
 
