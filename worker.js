@@ -131,7 +131,6 @@ export default {
         const url_zingmp3 = formData.get("url_zingmp3");
         const url_nct = formData.get("url_nct");
 
-        // Kiểm tra xem có upload ảnh mới hay không
         const coverImage = formData.get("cover_image");
         let updateQuery = "";
         let bindParams = [];
@@ -205,7 +204,7 @@ export default {
       pathname = "/index.html";
     } else {
       const pathSegments = pathname.split("/").filter(Boolean);
-      // Đã thêm điều kiện loại trừ "update" để không bị nhầm lẫn với link release bài hát
+      // Đã thêm điều kiện loại trừ "create" và "update" để Worker nhận diện đúng file tĩnh
       if (pathSegments.length === 1 && pathSegments[0] !== "create" && pathSegments[0] !== "update" && !pathSegments[0].includes(".")) {
         pathname = "/index.html";
       }
