@@ -25,16 +25,23 @@
       color: #1a1a1a;
       display: flex;
       justify-content: center;
+      align-items: center;
       padding: 30px 20px;
     }
 
     .setup-layout {
       display: flex;
       width: 100%;
-      max-width: 1200px;
+      max-width: 900px;
       gap: 35px;
       align-items: flex-start;
-      justify-content: center; /* Mặc định căn giữa khi chưa chọn bài */
+      justify-content: center;
+      transition: max-width 0.3s ease;
+    }
+
+    .setup-layout.active-form {
+      max-width: 1200px;
+      justify-content: space-between;
     }
 
     /* Left Column: Search & Smart Links List */
@@ -345,7 +352,7 @@
       </div>
     </div>
 
-    <!-- RIGHT: UPDATE FORM (Mặc định ẩn, chỉ hiện khi chọn bài) -->
+    <!-- RIGHT: UPDATE FORM (Mặc định ẩn, chỉ hiện khi click chọn bài) -->
     <div class="setup-form-container" id="update-form-container">
       <div class="form-header">
         <h1 id="form-editing-title">Update Smart Link</h1>
@@ -510,8 +517,8 @@
       document.querySelectorAll('.release-item').forEach(el => el.classList.remove('active'));
       element.classList.add('active');
 
-      // Khi chọn bài, hiển thị form bên phải và chỉnh lại bố cục layout
-      document.getElementById('setup-layout.style').justifyContent = 'flex-start';
+      // Mở rộng layout và hiển thị form chỉnh sửa bên phải
+      document.getElementById('setup-layout').classList.add('active-form');
       document.getElementById('update-form-container').classList.add('active');
 
       loadReleaseDetails(item.url_release);
