@@ -199,13 +199,13 @@ export default {
       }
     }
 
-    // 5. Xử lý định tuyến các file tĩnh từ GitHub repository (Dashboard, Create, Update, Public Release Pages)
+    // 5. Xử lý định tuyến các file tĩnh từ GitHub repository (Trỏ trang chủ về /dashboard/index.html)
     if (pathname === "/" || pathname === "") {
-      pathname = "/index.html";
+      pathname = "/dashboard/index.html";
     } else {
       const pathSegments = pathname.split("/").filter(Boolean);
-      // Loại trừ các route quản trị hệ thống khỏi việc bị ép về index.html (trang chủ hiển thị Smart Link cá nhân)
-      if (pathSegments.length === 1 && pathSegments[0] !== "create" && pathSegments[0] !== "update" && !pathSegments[0].includes(".")) {
+      // Loại trừ các route quản trị và thư mục dashboard khỏi việc bị ép về trang xem release cá nhân
+      if (pathSegments.length === 1 && pathSegments[0] !== "create" && pathSegments[0] !== "update" && pathSegments[0] !== "dashboard" && !pathSegments[0].includes(".")) {
         pathname = "/index.html";
       }
     }
