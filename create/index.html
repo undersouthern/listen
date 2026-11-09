@@ -180,45 +180,6 @@
       display: block;
     }
 
-    /* Group URL Landing Page ghép đôi dạng hộp */
-    .url-group-wrapper {
-      display: flex;
-      width: 100%;
-      background: #fafbfc;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      overflow: hidden;
-      transition: border-color 0.15s;
-    }
-
-    .url-group-wrapper:focus-within {
-      border-color: #7c3aed;
-      background: #fff;
-    }
-
-    .url-prefix {
-      padding: 9px 10px 9px 12px;
-      background: #f1f3f5;
-      color: #555;
-      font-size: 0.85rem;
-      font-weight: 500;
-      border-right: 1px solid #d1d5db;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      user-select: none;
-    }
-
-    .url-suffix-input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      padding: 9px 12px;
-      font-size: 0.88rem;
-      color: #111;
-      outline: none;
-    }
-
     .save-btn {
       width: 100%;
       padding: 11px;
@@ -229,7 +190,7 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      margin-top: 20px;
+      margin-top: 25px;
       transition: background 0.15s;
     }
 
@@ -471,7 +432,7 @@
     <div class="setup-form-container">
       <div class="form-header">
         <h1>Create Release Page</h1>
-        <p>Customize your release page with a URL, cover artwork, title, and streaming platform links.</p>
+        <p>Customize your release page with cover artwork, title, and streaming platform links.</p>
       </div>
 
       <form id="smartlink-form">
@@ -557,15 +518,6 @@
           <div class="service-input-wrapper">
             <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-nct.png" alt="NhacCuaTui" class="service-logo-img"></div>
             <input type="text" class="form-input" id="url-nct" placeholder="NhacCuaTui URL (Tùy chọn)">
-          </div>
-        </div>
-
-        <div class="section-title">Custom URL</div>
-        <div class="form-group">
-          <label class="form-label">Public URL</label>
-          <div class="url-group-wrapper">
-            <span class="url-prefix">https://listen.undersouthern.asia/</span>
-            <input type="text" class="url-suffix-input" id="input-url-suffix" required>
           </div>
         </div>
 
@@ -696,7 +648,7 @@
       }
     });
 
-    // Xử lý gửi request POST tạo release page qua API Worker
+    // Xử lý gửi request POST tạo release page qua API Worker (Tự sinh VNxxxxx ở Backend)
     document.getElementById('smartlink-form').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -706,8 +658,6 @@
 
       const formData = new FormData();
       formData.append('title', document.getElementById('input-title').value);
-      formData.append('url_release', document.getElementById('input-url-suffix').value);
-      formData.append('id_title', document.getElementById('input-url-suffix').value);
 
       // Thu thập link các nền tảng (nếu bỏ trống thì gửi chuỗi rỗng)
       formData.append('url_spotify', document.getElementById('url-spotify').value);
