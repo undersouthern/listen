@@ -1,8 +1,71 @@
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     let pathname = url.pathname;
 
+    // 1. Xử lý API tạo smart-link từ form Create (/api/create)
+    if (request.method === "POST" && pathname === "/api/create") {
+      try {
+        const formData = await request.formData();
+        
+        const title = formData.get("title");
+        const url_release = formData.get("url_release");
+        const id_title = formData.get("id_title") || url_release; // Sử dụng fallback nếu id_title trống
+
+        const url_spotify = formData.get("url_spotify");
+        const url_apple_music_music = formData.get("url_apple_music_music");
+        const url_amazon_music = formData.get("url_amazon_music");
+        const url_soundcloud = formData.get("url_soundcloud");
+        const url_deezer = formData.get("url_deezer");
+        const url_youtube = formData.get("url_youtube");
+        const url_youtube_music = formData.get("url_youtube_music");
+        const url_zingmp3 = formData.get("url_zingmp3");
+        const url_nct = formData.get("url_nct");
+
+        // Xử lý upload file ảnh vào R2 bucket (artwork-landing-page thông qua binding MY_BUCKET)
+        let cover_url = "";
+        const coverImage = formData.get("cover_image");
+        if (coverImage && typeof coverImage === "object" && coverImage.size > 0) {
+          const fileName = `covers/${Date.now()}-${coverImage.name}`;
+          await env.MY_BUCKET.put(fileName, coverImage.stream(), {
+            httpMetadata: { contentType: coverImage.type }
+          });
+          cover_url = `https://listen.undersouthern.asia/${fileName}`;
+        }
+
+        // Thực thi câu lệnh SQL chèn dữ liệu vào bảng landing_page trong D1
+        await env.DB.prepare(`
+          INSERT INTO landing_page (
+            id_title, title, cover_url, 
+            url_spotify, url_apple_music_music, url_amazon_music, 
+            url_soundcloud, url_deezer, url_youtube, 
+            url_youtube_music, url_zingmp3, url_nct, url_release
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          id_title, title, cover_url,
+          url_spotify, url_apple_music_music, url_amazon_music,
+          url_soundcloud, url_deezer, url_youtube,
+          url_youtube_music, url_zingmp3, url_nct, url_release
+        ).run();
+
+        return new Response(JSON.stringify({ success: true, url_release }), {
+          headers: { 
+            "Content-Type": "application/json; charset=UTF-8",
+            "Access-Control-Allow-Origin": "*"
+          }
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, error: error.message }), {
+          status: 500,
+          headers: { 
+            "Content-Type": "application/json; charset=UTF-8",
+            "Access-Control-Allow-Origin": "*"
+          }
+        });
+      }
+    }
+
+    // 2. Xử lý định tuyến các file tĩnh từ GitHub repository
     // Chuẩn hóa root path về index.html
     if (pathname === "/" || pathname === "") {
       pathname = "/index.html";
