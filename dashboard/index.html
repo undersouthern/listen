@@ -1,1 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Smart Links Dashboard | UNDERSOUTHERN</title>
 
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/undersouthern/my-images/main/logo-black.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      background-color: #f4f6f8;
+      color: #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Thanh ngang Header đồng bộ màu sắc và style chuẩn như trang Create */
+    .dashboard-header {
+      height: 60px;
+      background: #ffffff;
+      border-bottom: 1px solid #e1e4e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 25px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+      z-index: 10;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+    }
+
+    .nav-tab-btn {
+      padding: 7px 24px;
+      background: #f8f9fa;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      color: #444;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      letter-spacing: 0.03em;
+    }
+
+    .nav-tab-btn:hover {
+      border-color: #7c3aed;
+      color: #7c3aed;
+      background: #fff;
+    }
+
+    .nav-tab-btn.active {
+      background: #7c3aed;
+      color: #fff;
+      border-color: #7c3aed;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+    }
+
+    /* Vùng chứa nội dung các iframe nhúng */
+    .dashboard-content {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 60px);
+      background: #f4f6f8;
+    }
+
+    .tab-pane {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Thanh điều hướng đồng bộ giao diện sáng -->
+  <header class="dashboard-header">
+    <div class="nav-tabs">
+      <button class="nav-tab-btn active" onclick="switchTab('create', this)">CREATE</button>
+      <button class="nav-tab-btn" onclick="switchTab('update', this)">UPDATE</button>
+    </div>
+  </header>
+
+  <!-- Khung nội dung nhúng trực tiếp giao diện Create và Update -->
+  <main class="dashboard-content">
+    <!-- Mục CREATE (Hiển thị mặc định) -->
+    <iframe id="pane-create" class="tab-pane active" src="/create"></iframe>
+
+    <!-- Mục UPDATE -->
+    <iframe id="pane-update" class="tab-pane" src="/update"></iframe>
+  </main>
+
+  <script>
+    // Hàm chuyển tab mượt mà không tải lại trang
+    function switchTab(tabName, btnElement) {
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
+      btnElement.classList.add('active');
+
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+      document.getElementById(`pane-${tabName}`).classList.add('active');
+    }
+  </script>
+</body>
+</html>
