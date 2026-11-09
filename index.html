@@ -63,22 +63,24 @@
       align-items: center;
     }
 
-    /* Main Card Frame */
+    /* Main Card Frame với các góc bo tròn mịn */
     .card-wrapper {
       width: 100%;
       background: #ffffff;
-      border-radius: 6px;
+      border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
     }
 
-    /* Artwork Container */
+    /* Artwork Container với góc bo tròn mịn màng */
     .cover-container {
       position: relative;
       width: 100%;
       aspect-ratio: 1 / 1;
       background-color: #000;
       overflow: hidden;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
     }
 
     .cover-img {
@@ -140,6 +142,8 @@
     }
 
     .platform-row:last-child {
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
       border-bottom: none;
     }
 
@@ -242,7 +246,7 @@
   <div class="smartlink-container">
     <div class="card-wrapper" id="main-card">
 
-      <!-- Cover Artwork Container (Đã loại bỏ hoàn toàn icon play) -->
+      <!-- Cover Artwork Container -->
       <div class="cover-container">
         <img class="cover-img" id="track-cover" src="" alt="Cover Artwork">
       </div>
@@ -324,7 +328,7 @@
           document.getElementById('og-image').setAttribute('content', data.cover_url);
         }
 
-        // 4. Render danh sách nền tảng (Có link -> PLAY, Trống -> COMING SOON, chuyển hướng trực tiếp trang hiện tại)
+        // 4. Render danh sách nền tảng (Có link -> PLAY, Trống -> COMING SOON)
         const listContainer = document.getElementById('platforms-list');
         listContainer.innerHTML = '';
 
