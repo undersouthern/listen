@@ -205,6 +205,7 @@ export default {
       pathname = "/index.html";
     } else {
       const pathSegments = pathname.split("/").filter(Boolean);
+      // Đã thêm điều kiện loại trừ "update" để không bị nhầm lẫn với link release bài hát
       if (pathSegments.length === 1 && pathSegments[0] !== "create" && pathSegments[0] !== "update" && !pathSegments[0].includes(".")) {
         pathname = "/index.html";
       }
