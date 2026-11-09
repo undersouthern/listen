@@ -38,7 +38,7 @@
 
     /* Left Column: Search & Smart Links List */
     .releases-sidebar {
-      width: 380px;
+      width: 410px;
       background: #ffffff;
       border: 1px solid #e1e4e8;
       border-radius: 10px;
@@ -76,11 +76,11 @@
     }
 
     .releases-list-box {
-      max-height: 500px;
+      max-height: 520px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .release-item {
@@ -91,7 +91,7 @@
       cursor: pointer;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
       transition: all 0.15s;
     }
 
@@ -108,27 +108,36 @@
     .release-info {
       width: 100%;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
-    .release-info h4 {
-      font-size: 0.86rem;
+    .release-title-row {
+      font-size: 0.84rem;
       font-weight: 600;
       color: #111;
-      margin-bottom: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      width: 100%;
     }
 
-    .release-info span {
-      font-size: 0.74rem;
-      color: #777;
+    .release-artist-row {
+      font-size: 0.78rem;
+      color: #555;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      display: block;
-      width: 100%;
+    }
+
+    .release-url-row {
+      font-size: 0.72rem;
+      color: #7c3aed;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
+      margin-top: 2px;
     }
 
     /* Right Column: Update Form */
@@ -483,10 +492,21 @@
       releases.forEach(item => {
         const div = document.createElement('div');
         div.className = 'release-item';
+
+        // Tự động bóc tách Title và Artist nếu title lưu theo định dạng "Title - Artist"
+        let trackTitle = item.title || "";
+        let trackArtist = "";
+        if (trackTitle.includes(" - ")) {
+          const parts = trackTitle.split(" - ");
+          trackTitle = parts[0].trim();
+          trackArtist = parts.slice(1).join(" - ").trim();
+        }
+
         div.innerHTML = `
           <div class="release-info">
-            <h4>${item.title}</h4>
-            <span>/${item.url_release}</span>
+            <div class="release-title-row"><strong>Title:</strong> ${trackTitle}</div>
+            ${trackArtist ? `<div class="release-artist-row"><strong>Artist:</strong> ${trackArtist}</div>` : ''}
+            <div class="release-url-row">https://listen.undersouthern.asia/${item.url_release}</div>
           </div>
         `;
 
