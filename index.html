@@ -242,7 +242,7 @@
   <div class="smartlink-container">
     <div class="card-wrapper" id="main-card">
 
-      <!-- Cover Artwork Container (Đã bỏ nút play ở giữa) -->
+      <!-- Cover Artwork Container (Đã loại bỏ hoàn toàn icon play) -->
       <div class="cover-container">
         <img class="cover-img" id="track-cover" src="" alt="Cover Artwork">
       </div>
@@ -303,7 +303,7 @@
         document.getElementById('page-title').textContent = fullTitle;
         document.getElementById('og-title').setAttribute('content', fullTitle);
 
-        // 2. Tách tên bài hát và nghệ sĩ (Ví dụ: CHÀNG THI SĨ CẦM CA - chocoo)
+        // 2. Tách tên bài hát và nghệ sĩ
         const parts = data.title.split("-").map(p => p.trim());
         const trackTitle = parts[0] || data.title;
         const trackArtist = parts.length > 1 ? parts.slice(1).join(" - ") : "";
@@ -324,7 +324,7 @@
           document.getElementById('og-image').setAttribute('content', data.cover_url);
         }
 
-        // 4. Render danh sách nền tảng (Có link -> PLAY, Trống -> COMING SOON)
+        // 4. Render danh sách nền tảng (Có link -> PLAY, Trống -> COMING SOON, chuyển hướng trực tiếp trang hiện tại)
         const listContainer = document.getElementById('platforms-list');
         listContainer.innerHTML = '';
 
@@ -336,7 +336,7 @@
           row.className = hasLink ? 'platform-row' : 'platform-row coming-soon';
           
           if (hasLink) {
-            row.href = platformUrl; // Chuyển hướng trực tiếp ngay trên trang hiện tại, không mở tab mới
+            row.href = platformUrl; // Chuyển hướng trực tiếp ngay trên trang hiện tại
           }
 
           row.innerHTML = `
