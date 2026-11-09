@@ -78,7 +78,7 @@
       position: relative;
       width: 100%;
       aspect-ratio: 1 / 1;
-      background-color: #000;
+      background-color: #000000; /* Luôn giữ nền đen khi chưa tải ảnh */
       overflow: hidden;
     }
 
@@ -87,6 +87,12 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .cover-img.loaded {
+      opacity: 1;
     }
 
     /* Track Info Bar với thanh phân cách chéo xéo qua trái */
@@ -262,7 +268,7 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
       opacity: 0.7;
-      pointer-events: none; /* Cố định không cho bấm vào chữ Powered by */
+      pointer-events: none;
     }
 
     .footer-brand-link {
@@ -299,12 +305,12 @@
 
       <!-- Cover Artwork Container -->
       <div class="cover-container">
-        <img class="cover-img" id="track-cover" src="" alt="Cover Artwork">
+        <img class="cover-img" id="track-cover" alt="" src="">
       </div>
 
       <!-- Info Bar -->
       <div class="track-info-bar">
-        <div class="track-title-text" id="track-title">Loading...</div>
+        <div class="track-title-text" id="track-title">loading</div>
         <div class="track-artist-text" id="track-artist"></div>
         <div class="distributed-text">Music Services</div>
       </div>
@@ -391,9 +397,17 @@
           artistEl.style.display = "none";
         }
 
-        // 3. Hiển thị ảnh bìa trực tiếp từ R2 Public Development URL
+        // 3. Hiển thị ảnh bìa trực tiếp từ R2 Public Development URL (giữ khung đen sạch sẽ nếu lỗi hoặc chưa có)
+        const coverImg = document.getElementById('track-cover');
         if (data.cover_url && data.cover_url.trim() !== "") {
-          document.getElementById('track-cover').src = data.cover_url;
+          coverImg.onload = function() {
+            coverImg.classList.add('loaded');
+          };
+          coverImg.onerror = function() {
+            coverImg.src = "";
+            coverImg.classList.remove('loaded');
+          };
+          coverImg.src = data.cover_url;
           document.getElementById('bg-ambient').style.backgroundImage = `url(${data.cover_url})`;
           document.getElementById('og-image').setAttribute('content', data.cover_url);
         }
@@ -410,7 +424,9 @@
           row.className = hasLink ? 'platform-row' : 'platform-row coming-soon';
           
           if (hasLink) {
-            row.href = platformUrl; // Chuyển hướng trực tiếp ngay trên trang hiện tại
+            row.href = platformUrl;
+            row.target = "_blank";
+            row.rel = "noopener noreferrer";
           }
 
           row.innerHTML = `
