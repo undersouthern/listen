@@ -84,14 +84,14 @@
     }
 
     .release-item {
-      padding: 10px 12px;
+      padding: 12px 14px;
       background: #fafbfc;
       border: 1px solid #e5e7eb;
       border-radius: 8px;
       cursor: pointer;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
+      gap: 3px;
       transition: all 0.15s;
     }
 
@@ -106,47 +106,29 @@
     }
 
     .release-info {
+      width: 100%;
       overflow: hidden;
-      padding-right: 8px;
     }
 
     .release-info h4 {
-      font-size: 0.82rem;
+      font-size: 0.86rem;
       font-weight: 600;
       color: #111;
       margin-bottom: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 210px;
+      width: 100%;
     }
 
     .release-info span {
-      font-size: 0.72rem;
+      font-size: 0.74rem;
       color: #777;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       display: block;
-      max-width: 210px;
-    }
-
-    .select-update-btn {
-      padding: 5px 10px;
-      background: #7c3aed;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .select-update-btn:hover {
-      background: #6d28d9;
+      width: 100%;
     }
 
     /* Right Column: Update Form */
@@ -364,7 +346,7 @@
 
     <!-- RIGHT: PLACEHOLDER STATE -->
     <div class="placeholder-state" id="placeholder-state">
-      <p>👈 Please click the <strong>Update</strong> button on a Smart Link from the left list to open the editing form.</p>
+      <p>👈 Please click any Smart Link from the left list to open the editing form.</p>
     </div>
 
     <!-- RIGHT: UPDATE FORM -->
@@ -501,19 +483,13 @@
       releases.forEach(item => {
         const div = document.createElement('div');
         div.className = 'release-item';
-        // Hiển thị dòng trên là tiêu đề (title), dòng dưới là đường link public URL (url_release)
+        // Hiển thị toàn bộ mục làm vùng bấm chọn, dòng trên là title, dòng dưới là url_release
         div.innerHTML = `
           <div class="release-info">
             <h4>${item.title}</h4>
             <span>/${item.url_release}</span>
           </div>
-          <button type="button" class="select-update-btn">Update</button>
         `;
-
-        div.querySelector('.select-update-btn').addEventListener('click', (e) => {
-          e.stopPropagation();
-          selectReleaseForUpdate(item, div);
-        });
 
         div.addEventListener('click', () => {
           selectReleaseForUpdate(item, div);
