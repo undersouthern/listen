@@ -127,11 +127,23 @@
       padding: 14px 16px;
     }
 
+    /* Dòng 1: Tên bài hát */
     .track-title-text {
-      font-size: 0.92rem;
-      font-weight: 600;
-      color: #eaeaea;
-      margin-bottom: 4px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Dòng 2: Tên nghệ sĩ */
+    .track-artist-text {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #b5b5b5;
+      margin-bottom: 6px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -139,7 +151,7 @@
 
     .distributed-text {
       font-size: 0.72rem;
-      color: #a3a3a3;
+      color: #888888;
       letter-spacing: 0.02em;
     }
 
@@ -269,6 +281,7 @@
       <!-- Info Bar -->
       <div class="track-info-bar">
         <div class="track-title-text" id="track-title">Loading...</div>
+        <div class="track-artist-text" id="track-artist"></div>
         <div class="distributed-text">Music Services</div>
       </div>
 
@@ -318,20 +331,34 @@
         
         const data = await response.json();
 
-        // 1. Cập nhật tiêu đề trang (Title) kèm hậu tố thương hiệu
+        // Cập nhật tiêu đề trang (Title) kèm hậu tố thương hiệu
         const fullTitle = `${data.title} - UNDERSOUTHERN`;
         document.getElementById('page-title').textContent = fullTitle;
         document.getElementById('og-title').setAttribute('content', fullTitle);
-        document.getElementById('track-title').textContent = data.title;
 
-        // 2. Cập nhật ảnh bìa từ cột cover_url trong cơ sở dữ liệu D1
+        // Tách chuỗi title theo dấu gạch ngang (-) để phân tách Tên bài hát và Nghệ sĩ (nếu có)
+        // Ví dụ: "CHÀNG THI SĨ CẦM CA - chocoo" -> Dòng 1: "CHÀNG THI SĨ CẦM CA", Dòng 2: "chocoo"
+        const parts = data.title.split("-").map(p => p.trim());
+        const trackTitle = parts[0] || data.title;
+        const trackArtist = parts.length > 1 ? parts.slice(1).join(" - ") : "";
+
+        document.getElementById('track-title').textContent = trackTitle;
+        const artistEl = document.getElementById('track-artist');
+        if (trackArtist) {
+          artistEl.textContent = trackArtist;
+          artistEl.style.display = "block";
+        } else {
+          artistEl.style.display = "none";
+        }
+
+        // Cập nhật ảnh bìa từ cột cover_url trong cơ sở dữ liệu D1
         if (data.cover_url && data.cover_url.trim() !== "") {
           document.getElementById('track-cover').src = data.cover_url;
           document.getElementById('bg-ambient').style.backgroundImage = `url(${data.cover_url})`;
           document.getElementById('og-image').setAttribute('content', data.cover_url);
         }
 
-        // 3. Render danh sách nền tảng (Có link hiển thị Play, Không có link hiển thị Coming Soon)
+        // Render danh sách nền tảng
         const listContainer = document.getElementById('platforms-list');
         listContainer.innerHTML = '';
 
