@@ -362,6 +362,7 @@
     ];
 
     async function loadReleaseData() {
+      // Lấy trực tiếp url_release (slug) từ URL trên trình duyệt
       const pathSegments = window.location.pathname.split("/").filter(Boolean);
       const urlRelease = pathSegments[pathSegments.length - 1];
 
