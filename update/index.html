@@ -34,6 +34,7 @@
       max-width: 1200px;
       gap: 35px;
       align-items: flex-start;
+      justify-content: center; /* Mặc định căn giữa khi chưa chọn bài */
     }
 
     /* Left Column: Search & Smart Links List */
@@ -44,6 +45,7 @@
       border-radius: 10px;
       padding: 24px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      transition: all 0.3s ease;
     }
 
     .sidebar-header {
@@ -143,7 +145,7 @@
       text-decoration: underline;
     }
 
-    /* Right Column: Update Form */
+    /* Right Column: Update Form (Mặc định ẩn hoàn toàn) */
     .setup-form-container {
       flex: 1;
       background: #ffffff;
@@ -156,18 +158,6 @@
 
     .setup-form-container.active {
       display: block;
-    }
-
-    .placeholder-state {
-      flex: 1;
-      background: #ffffff;
-      border: 1px solid #e1e4e8;
-      border-radius: 10px;
-      padding: 80px 30px;
-      text-align: center;
-      color: #666;
-      font-size: 0.9rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
     }
 
     .form-header h1 {
@@ -341,7 +331,7 @@
 </head>
 <body>
 
-  <div class="setup-layout">
+  <div class="setup-layout" id="setup-layout">
     
     <!-- LEFT SIDEBAR: SEARCH & SMART LINKS LIST -->
     <div class="releases-sidebar">
@@ -355,12 +345,7 @@
       </div>
     </div>
 
-    <!-- RIGHT: PLACEHOLDER STATE -->
-    <div class="placeholder-state" id="placeholder-state">
-      <p>👈 Please click any Smart Link from the left list to open the editing form.</p>
-    </div>
-
-    <!-- RIGHT: UPDATE FORM -->
+    <!-- RIGHT: UPDATE FORM (Mặc định ẩn, chỉ hiện khi chọn bài) -->
     <div class="setup-form-container" id="update-form-container">
       <div class="form-header">
         <h1 id="form-editing-title">Update Smart Link</h1>
@@ -525,7 +510,8 @@
       document.querySelectorAll('.release-item').forEach(el => el.classList.remove('active'));
       element.classList.add('active');
 
-      document.getElementById('placeholder-state').style.display = 'none';
+      // Khi chọn bài, hiển thị form bên phải và chỉnh lại bố cục layout
+      document.getElementById('setup-layout.style').justifyContent = 'flex-start';
       document.getElementById('update-form-container').classList.add('active');
 
       loadReleaseDetails(item.url_release);
