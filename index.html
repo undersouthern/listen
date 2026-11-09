@@ -1,1 +1,362 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Người Lớn - PatGM, Habin | UNDERSOUTHERN</title>
 
+  <!-- Open Graph & Favicon -->
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/undersouthern/my-images/main/logo-black.png">
+  <meta property="og:type" content="music.song">
+  <meta property="og:title" content="Người Lớn - PatGM, Habin">
+  <meta property="og:description" content="Distributed by UNDERSOUTHERN">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=700&auto=format&fit=crop&q=80">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      background-color: #121214;
+      position: relative;
+      overflow-x: hidden;
+      padding: 30px 16px 40px;
+    }
+
+    /* Ambient dynamic blurred background */
+    .bg-blur {
+      position: fixed;
+      top: -15%;
+      left: -15%;
+      width: 130%;
+      height: 130%;
+      background-size: cover;
+      background-position: center;
+      filter: blur(55px) brightness(0.42);
+      z-index: 0;
+      pointer-events: none;
+      transform: scale(1.05);
+      transition: background-image 0.4s ease-in-out;
+    }
+
+    .smartlink-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 375px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Main Card Frame */
+    .card-wrapper {
+      width: 100%;
+      background: #ffffff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Artwork Container */
+    .cover-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background-color: #000;
+      overflow: hidden;
+    }
+
+    .cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Play Button Overlay on Artwork */
+    .artwork-play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s ease, background 0.2s;
+    }
+
+    .artwork-play-btn:hover {
+      transform: translate(-50%, -50%) scale(1.06);
+      background: #ffffff;
+    }
+
+    .artwork-play-btn svg {
+      width: 26px;
+      height: 26px;
+      fill: #111111;
+      margin-left: 3px;
+    }
+
+    /* Track Info Bar */
+    .track-info-bar {
+      background-color: #2b2b2b;
+      color: #ffffff;
+      text-align: center;
+      padding: 14px 16px;
+    }
+
+    .track-title-text {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #eaeaea;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .distributed-text {
+      font-size: 0.72rem;
+      color: #a3a3a3;
+      letter-spacing: 0.02em;
+    }
+
+    /* Platforms List */
+    .platforms-list {
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+    }
+
+    .platform-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid #eef0f2;
+      text-decoration: none;
+      transition: background-color 0.15s ease;
+    }
+
+    .platform-row:last-child {
+      border-bottom: none;
+    }
+
+    .platform-row:hover {
+      background-color: #f8f9fa;
+    }
+
+    .platform-brand-wrap {
+      display: flex;
+      align-items: center;
+      height: 32px;
+    }
+
+    /* Khung chuẩn tỷ lệ hình ảnh các file PNG logo */
+    .platform-logo-img {
+      max-height: 26px;
+      max-width: 130px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Nút Play */
+    .play-action-btn {
+      padding: 6px 18px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #333333;
+      border: 1px solid #d5d7dc;
+      border-radius: 4px;
+      background: #ffffff;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .platform-row:hover .play-action-btn {
+      border-color: #111111;
+      color: #000000;
+    }
+
+    /* Footer Powered by */
+    .page-footer {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      color: #b5b5b5;
+      font-size: 0.74rem;
+    }
+
+    .footer-brand-link {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      opacity: 0.85;
+      transition: opacity 0.2s ease;
+    }
+
+    .footer-brand-link:hover {
+      opacity: 1;
+    }
+
+    .footer-brand-logo {
+      height: 15px;
+      width: auto;
+      filter: brightness(0) invert(1); /* Chuyển logo màu tối sang trắng hiển thị trên nền mờ */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background blur dynamic -->
+  <div class="bg-blur" id="bg-ambient"></div>
+
+  <div class="smartlink-container">
+    <div class="card-wrapper">
+
+      <!-- Cover Artwork & Center Play Button -->
+      <div class="cover-container">
+        <img class="cover-img" id="track-cover" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=700&auto=format&fit=crop&q=80" alt="Cover Artwork">
+        <button class="artwork-play-btn" id="artwork-play-btn" aria-label="Nghe thử">
+          <svg viewBox="0 0 24 24" id="play-btn-svg"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+      </div>
+
+      <!-- Info Bar -->
+      <div class="track-info-bar">
+        <div class="track-title-text" id="track-title">Người Lớn - PatGM, Habin</div>
+        <div class="distributed-text">Distributed by UNDERSOUTHERN</div>
+      </div>
+
+      <!-- Platforms List -->
+      <div class="platforms-list" id="platforms-list">
+        <!-- Render động đúng thứ tự -->
+      </div>
+    </div>
+
+    <!-- Powered by Footer -->
+    <footer class="page-footer">
+      <span>Powered by</span>
+      <a href="https://www.undersouthern.asia" target="_blank" rel="noopener" class="footer-brand-link">
+        <img src="https://raw.githubusercontent.com/undersouthern/my-images/main/logo-black.png" alt="UNDERSOUTHERN" class="footer-brand-logo">
+      </a>
+    </footer>
+  </div>
+
+  <audio id="audio-element" preload="none"></audio>
+
+  <script>
+    // ==========================================
+    // KHAI BÁO CÁC FILE LOGO TRONG THƯ MỤC ASSETS
+    // ==========================================
+    const PLATFORM_DATA = [
+      { id: "spotify", name: "Spotify", logo: "assets/logo-spotify.png" },
+      { id: "apple", name: "Apple Music", logo: "assets/logo-apple-music.png" },
+      { id: "amazon", name: "Amazon Music", logo: "assets/logo-amazon-music.png" },
+      { id: "soundcloud", name: "SoundCloud", logo: "assets/logo-soundcloud.png" },
+      { id: "deezer", name: "Deezer", logo: "assets/logo-deezer.png" },
+      { id: "youtube", name: "YouTube", logo: "assets/logo-youtube.png" },
+      { id: "youtubemusic", name: "YouTube Music", logo: "assets/logo-youtube-music.png" },
+      { id: "zingmp3", name: "Zing MP3", logo: "assets/logo-zingmp3.png" },
+      { id: "nhaccuatui", name: "NhacCuaTui", logo: "assets/logo-nct.png" }
+    ];
+
+    // ==========================================
+    // THÔNG TIN BÀI HÁT & LINK STREAMING
+    // ==========================================
+    const CURRENT_TRACK = {
+      title: "Người Lớn - PatGM, Habin",
+      coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=700&auto=format&fit=crop&q=80",
+      audioPreview: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+      links: {
+        spotify: "https://open.spotify.com",
+        apple: "https://music.apple.com",
+        amazon: "https://music.amazon.com",
+        soundcloud: "https://soundcloud.com",
+        deezer: "https://www.deezer.com",
+        youtube: "https://www.youtube.com",
+        youtubemusic: "https://music.youtube.com",
+        zingmp3: "https://zingmp3.vn",
+        nhaccuatui: "https://www.nhaccuatui.com"
+      }
+    };
+
+    // Khởi tạo giao diện
+    document.getElementById('track-title').textContent = CURRENT_TRACK.title;
+    document.getElementById('track-cover').src = CURRENT_TRACK.coverUrl;
+    document.getElementById('bg-ambient').style.backgroundImage = `url(${CURRENT_TRACK.coverUrl})`;
+
+    // Render danh sách 9 nền tảng dùng ảnh từ assets
+    const listContainer = document.getElementById('platforms-list');
+    listContainer.innerHTML = '';
+
+    PLATFORM_DATA.forEach(item => {
+      const link = CURRENT_TRACK.links[item.id] || "#";
+      const row = document.createElement('a');
+      row.className = 'platform-row';
+      row.href = link;
+      row.target = '_blank';
+      row.rel = 'noopener noreferrer';
+
+      row.innerHTML = `
+        <div class="platform-brand-wrap">
+          <img src="${item.logo}" alt="${item.name}" class="platform-logo-img">
+        </div>
+        <button class="play-action-btn" type="button">Play</button>
+      `;
+      listContainer.appendChild(row);
+    });
+
+    // Trình phát nhạc Audio Demo
+    const audio = document.getElementById('audio-element');
+    const playBtn = document.getElementById('artwork-play-btn');
+    const playSvg = document.getElementById('play-btn-svg');
+
+    if (CURRENT_TRACK.audioPreview) {
+      audio.src = CURRENT_TRACK.audioPreview;
+      playBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (audio.paused) {
+          audio.play();
+          playSvg.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+        } else {
+          audio.pause();
+          playSvg.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+        }
+      });
+      audio.addEventListener('ended', () => {
+        playSvg.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+      });
+    } else {
+      playBtn.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
