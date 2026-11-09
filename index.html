@@ -184,26 +184,37 @@
       display: block;
     }
 
-    /* Nút Play */
+    /* Nút Play: Màu nhạt (#555555), font đơn giản, không viền đen, hover chuyển tím */
     .play-action-btn {
-      padding: 6px 18px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #333333;
-      border: 1px solid #d5d7dc;
-      border-radius: 4px;
+      padding: 7px 20px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #555555;
+      border: 1px solid #dcdfe4;
+      border-radius: 6px;
       background: #ffffff;
-      transition: all 0.15s ease;
+      transition: all 0.2s ease;
       white-space: nowrap;
       cursor: pointer;
+      outline: none;
+    }
+
+    .play-action-btn:hover {
+      background: #9b51e0;
+      color: #ffffff;
+      border-color: #9b51e0;
+      box-shadow: 0 2px 8px rgba(155, 81, 224, 0.35);
+    }
+
+    .play-action-btn:active {
+      transform: scale(0.96);
     }
 
     .platform-row:hover .play-action-btn {
-      border-color: #111111;
-      color: #000000;
+      border-color: #9b51e0;
     }
 
-    /* Footer Powered by */
+    /* Footer Powered by UNDERSOUTHERN */
     .page-footer {
       margin-top: 18px;
       display: flex;
@@ -229,7 +240,7 @@
     .footer-brand-logo {
       height: 15px;
       width: auto;
-      filter: brightness(0) invert(1); /* Chuyển logo màu tối sang trắng hiển thị trên nền mờ */
+      filter: brightness(0) invert(1);
     }
   </style>
 </head>
@@ -261,7 +272,7 @@
       </div>
     </div>
 
-    <!-- Powered by Footer -->
+    <!-- Powered by UNDERSOUTHERN Footer -->
     <footer class="page-footer">
       <span>Powered by</span>
       <a href="https://www.undersouthern.asia" target="_blank" rel="noopener" class="footer-brand-link">
