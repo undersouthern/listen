@@ -3,33 +3,7 @@ export default {
     const url = new URL(request.url);
     let pathname = url.pathname;
 
-    // 1. Xử lý phục vụ file ảnh lưu trong R2 Bucket khi truy cập đường dẫn /covers/...
-    if (pathname.startsWith("/covers/")) {
-      const fileKey = pathname.substring(1); // Lấy key chuẩn trong R2 (ví dụ: covers/173...)
-      try {
-        const object = await env.MY_BUCKET.get(fileKey);
-
-        if (!object) {
-          return new Response("Image not found in R2", { status: 404 });
-        }
-
-        const headers = new Headers();
-        headers.set("Access-Control-Allow-Origin", "*");
-        headers.set("Cache-Control", "public, max-age=31536000"); // Cache ảnh 1 năm
-        
-        if (object.httpMetadata && object.httpMetadata.contentType) {
-          headers.set("Content-Type", object.httpMetadata.contentType);
-        } else {
-          headers.set("Content-Type", "image/jpeg");
-        }
-
-        return new Response(object.body, { headers });
-      } catch (err) {
-        return new Response("Error fetching image: " + err.message, { status: 500 });
-      }
-    }
-
-    // 2. Xử lý API tạo smart-link từ form Create (/api/create)
+    // 1. Xử lý API tạo smart-link từ form Create (/api/create)
     if (request.method === "POST" && pathname === "/api/create") {
       try {
         const formData = await request.formData();
@@ -48,19 +22,21 @@ export default {
         const url_zingmp3 = formData.get("url_zingmp3");
         const url_nct = formData.get("url_nct");
 
-        // Xử lý upload file ảnh vào R2 bucket bằng ArrayBuffer và tạo đúng định dạng đường dẫn tuyệt đối
+        // Xử lý upload file ảnh lên R2 bucket và lấy trực tiếp Public Development URL của R2
         let cover_url = "";
         const coverImage = formData.get("cover_image");
         if (coverImage && typeof coverImage === "object" && coverImage.size > 0) {
-          const fileName = `covers/${Date.now()}-${coverImage.name}`;
-          const arrayBuffer = await coverImage.arrayBuffer();
+          const safeName = coverImage.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+          const fileName = `covers/${Date.now()}-${safeName}`;
           
+          const arrayBuffer = await coverImage.arrayBuffer();
           await env.MY_BUCKET.put(fileName, arrayBuffer, {
             httpMetadata: { contentType: coverImage.type }
           });
           
-          // Đường dẫn tuyệt đối chuẩn xác để Worker tự bắt route /covers/...
-          cover_url = `https://listen.undersouthern.asia/${fileName}`;
+          // Sử dụng đúng Public Development URL từ R2 bucket của bạn
+          const r2PublicDomain = "https://pub-3e105cf90fc140c484fbb8ece9b4271b.r2.dev";
+          cover_url = `${r2PublicDomain}/${fileName}`;
         }
 
         // Thực thi câu lệnh SQL chèn dữ liệu vào bảng landing_page trong D1
@@ -95,7 +71,7 @@ export default {
       }
     }
 
-    // 3. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug)
+    // 2. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug)
     if (request.method === "GET" && pathname.startsWith("/api/release/")) {
       const slug = pathname.split("/").pop();
       try {
@@ -121,7 +97,7 @@ export default {
       }
     }
 
-    // 4. Xử lý định tuyến các file tĩnh từ GitHub repository
+    // 3. Xử lý định tuyến các file tĩnh từ GitHub repository
     if (pathname === "/" || pathname === "") {
       pathname = "/index.html";
     } else {
