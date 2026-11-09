@@ -12,6 +12,7 @@ database_name = "landing-page"
 database_id = "e337e2fb-6540-4a08-9632-bb1ddf799737"
 
 [[r2_buckets]]
+MY_BUCKET = "MY_BUCKET"
 binding = "MY_BUCKET"
 bucket_name = "artwork-landing-page"
 
