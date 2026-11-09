@@ -199,12 +199,11 @@ export default {
       }
     }
 
-    // 5. Xử lý định tuyến các file tĩnh từ GitHub repository (Trỏ trang chủ về /dashboard/index.html)
-    if (pathname === "/" || pathname === "") {
+    // 5. Xử lý định tuyến các file tĩnh từ GitHub repository (Trỏ trang chủ về /dashboard/index.html)[cite: 2]
+    if (pathname === "/" || pathname === "" || pathname === "/dashboard" || pathname === "/dashboard/") {
       pathname = "/dashboard/index.html";
     } else {
       const pathSegments = pathname.split("/").filter(Boolean);
-      // Loại trừ các route quản trị và thư mục dashboard khỏi việc bị ép về trang xem release cá nhân
       if (pathSegments.length === 1 && pathSegments[0] !== "create" && pathSegments[0] !== "update" && pathSegments[0] !== "dashboard" && !pathSegments[0].includes(".")) {
         pathname = "/index.html";
       }
