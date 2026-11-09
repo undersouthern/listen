@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Người Lớn - PatGM, Habin | UNDERSOUTHERN</title>
+  <title id="page-title">Loading... - UNDERSOUTHERN</title>
 
   <!-- Open Graph & Favicon -->
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/undersouthern/my-images/main/logo-black.png">
   <meta property="og:type" content="music.song">
-  <meta property="og:title" content="Người Lớn - PatGM, Habin">
+  <meta property="og:title" id="og-title" content="UNDERSOUTHERN Smart Link">
   <meta property="og:description" content="Distributed by UNDERSOUTHERN">
-  <meta property="og:image" content="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=700&auto=format&fit=crop&q=80">
+  <meta property="og:image" id="og-image" content="">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -164,7 +164,15 @@
       border-bottom: none;
     }
 
-    .platform-row:hover {
+    .platform-row.coming-soon {
+      cursor: default;
+    }
+
+    .platform-row.coming-soon:hover {
+      background-color: #ffffff;
+    }
+
+    .platform-row:not(.coming-soon):hover {
       background-color: #f8f9fa;
     }
 
@@ -174,7 +182,6 @@
       height: 32px;
     }
 
-    /* Khung chuẩn tỷ lệ hình ảnh các file PNG logo */
     .platform-logo-img {
       max-height: 26px;
       max-width: 130px;
@@ -184,10 +191,9 @@
       display: block;
     }
 
-    /* Nút Play: Màu nhạt (#555555), font đơn giản, không viền đen, hover chuyển tím */
     .play-action-btn {
-      padding: 7px 20px;
-      font-size: 0.82rem;
+      padding: 7px 16px;
+      font-size: 0.78rem;
       font-weight: 500;
       color: #555555;
       border: 1px solid #dcdfe4;
@@ -199,19 +205,18 @@
       outline: none;
     }
 
-    .play-action-btn:hover {
+    .platform-row:not(.coming-soon) .play-action-btn:hover {
       background: #9b51e0;
       color: #ffffff;
       border-color: #9b51e0;
       box-shadow: 0 2px 8px rgba(155, 81, 224, 0.35);
     }
 
-    .play-action-btn:active {
-      transform: scale(0.96);
-    }
-
-    .platform-row:hover .play-action-btn {
-      border-color: #9b51e0;
+    .platform-row.coming-soon .play-action-btn {
+      color: #999999;
+      background: #f4f6f8;
+      border-color: #e5e7eb;
+      cursor: default;
     }
 
     /* Footer Powered by UNDERSOUTHERN */
@@ -220,27 +225,28 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
-      color: #b5b5b5;
-      font-size: 0.74rem;
+      font-size: 0.76rem;
     }
 
     .footer-brand-link {
-      display: inline-flex;
-      align-items: center;
+      color: #999999;
       text-decoration: none;
+      font-weight: 500;
+      letter-spacing: 0.03em;
       opacity: 0.85;
-      transition: opacity 0.2s ease;
+      transition: opacity 0.2s ease, color 0.2s ease;
     }
 
     .footer-brand-link:hover {
       opacity: 1;
+      color: #ffffff;
     }
 
-    .footer-brand-logo {
-      height: 15px;
-      width: auto;
-      filter: brightness(0) invert(1);
+    .not-found {
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+      font-size: 1rem;
     }
   </style>
 </head>
@@ -250,33 +256,32 @@
   <div class="bg-blur" id="bg-ambient"></div>
 
   <div class="smartlink-container">
-    <div class="card-wrapper">
+    <div class="card-wrapper" id="main-card">
 
       <!-- Cover Artwork & Center Play Button -->
       <div class="cover-container">
-        <img class="cover-img" id="track-cover" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=700&auto=format&fit=crop&q=80" alt="Cover Artwork">
-        <button class="artwork-play-btn" id="artwork-play-btn" aria-label="Nghe thử">
+        <img class="cover-img" id="track-cover" src="" alt="Cover Artwork">
+        <button class="artwork-play-btn" id="artwork-play-btn" aria-label="Nghe thử" style="display: none;">
           <svg viewBox="0 0 24 24" id="play-btn-svg"><path d="M8 5v14l11-7z"/></svg>
         </button>
       </div>
 
       <!-- Info Bar -->
       <div class="track-info-bar">
-        <div class="track-title-text" id="track-title">Người Lớn - PatGM, Habin</div>
-        <div class="distributed-text">Distributed by UNDERSOUTHERN</div>
+        <div class="track-title-text" id="track-title">Loading...</div>
+        <div class="distributed-text">Music Services</div>
       </div>
 
       <!-- Platforms List -->
       <div class="platforms-list" id="platforms-list">
-        <!-- Render động đúng thứ tự -->
+        <!-- Render động theo dữ liệu D1 -->
       </div>
     </div>
 
     <!-- Powered by UNDERSOUTHERN Footer -->
     <footer class="page-footer">
-      <span>Powered by</span>
       <a href="https://www.undersouthern.asia" target="_blank" rel="noopener" class="footer-brand-link">
-        <img src="https://raw.githubusercontent.com/undersouthern/my-images/main/logo-black.png" alt="UNDERSOUTHERN" class="footer-brand-logo">
+        Powered by UNDERSOUTHERN
       </a>
     </footer>
   </div>
@@ -284,90 +289,80 @@
   <audio id="audio-element" preload="none"></audio>
 
   <script>
-    // ==========================================
-    // KHAI BÁO CÁC FILE LOGO TRONG THƯ MỤC ASSETS
-    // ==========================================
-    const PLATFORM_DATA = [
-      { id: "spotify", name: "Spotify", logo: "assets/logo-spotify.png" },
-      { id: "apple", name: "Apple Music", logo: "assets/logo-apple-music.png" },
-      { id: "amazon", name: "Amazon Music", logo: "assets/logo-amazon-music.png" },
-      { id: "soundcloud", name: "SoundCloud", logo: "assets/logo-soundcloud.png" },
-      { id: "deezer", name: "Deezer", logo: "assets/logo-deezer.png" },
-      { id: "youtube", name: "YouTube", logo: "assets/logo-youtube.png" },
-      { id: "youtubemusic", name: "YouTube Music", logo: "assets/logo-youtube-music.png" },
-      { id: "zingmp3", name: "Zing MP3", logo: "assets/logo-zingmp3.png" },
-      { id: "nhaccuatui", name: "NhacCuaTui", logo: "assets/logo-nct.png" }
+    const PLATFORM_CONFIG = [
+      { id: "url_spotify", name: "Spotify", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-spotify.png" },
+      { id: "url_apple_music_music", name: "Apple Music", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-apple-music.png" },
+      { id: "url_amazon_music", name: "Amazon Music", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-amazon-music.png" },
+      { id: "url_soundcloud", name: "SoundCloud", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-soundcloud.png" },
+      { id: "url_deezer", name: "Deezer", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-deezer.png" },
+      { id: "url_youtube", name: "YouTube", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-youtube.png" },
+      { id: "url_youtube_music", name: "YouTube Music", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-youtube-music.png" },
+      { id: "url_zingmp3", name: "Zing MP3", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-zingmp3.png" },
+      { id: "url_nct", name: "NhacCuaTui", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-nct.png" }
     ];
 
-    // ==========================================
-    // THÔNG TIN BÀI HÁT & LINK STREAMING
-    // ==========================================
-    const CURRENT_TRACK = {
-      title: "Người Lớn - PatGM, Habin",
-      coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=700&auto=format&fit=crop&q=80",
-      audioPreview: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-      links: {
-        spotify: "https://open.spotify.com",
-        apple: "https://music.apple.com",
-        amazon: "https://music.amazon.com",
-        soundcloud: "https://soundcloud.com",
-        deezer: "https://www.deezer.com",
-        youtube: "https://www.youtube.com",
-        youtubemusic: "https://music.youtube.com",
-        zingmp3: "https://zingmp3.vn",
-        nhaccuatui: "https://www.nhaccuatui.com"
+    async function loadReleaseData() {
+      const pathSegments = window.location.pathname.split("/").filter(Boolean);
+      const urlRelease = pathSegments[pathSegments.length - 1];
+
+      if (!urlRelease || urlRelease === "index.html") {
+        document.getElementById('main-card').innerHTML = '<div class="not-found">Không tìm thấy thông tin release yêu cầu.</div>';
+        return;
       }
-    };
 
-    // Khởi tạo giao diện
-    document.getElementById('track-title').textContent = CURRENT_TRACK.title;
-    document.getElementById('track-cover').src = CURRENT_TRACK.coverUrl;
-    document.getElementById('bg-ambient').style.backgroundImage = `url(${CURRENT_TRACK.coverUrl})`;
-
-    // Render danh sách 9 nền tảng dùng ảnh từ assets
-    const listContainer = document.getElementById('platforms-list');
-    listContainer.innerHTML = '';
-
-    PLATFORM_DATA.forEach(item => {
-      const link = CURRENT_TRACK.links[item.id] || "#";
-      const row = document.createElement('a');
-      row.className = 'platform-row';
-      row.href = link;
-      row.target = '_blank';
-      row.rel = 'noopener noreferrer';
-
-      row.innerHTML = `
-        <div class="platform-brand-wrap">
-          <img src="${item.logo}" alt="${item.name}" class="platform-logo-img">
-        </div>
-        <button class="play-action-btn" type="button">Play</button>
-      `;
-      listContainer.appendChild(row);
-    });
-
-    // Trình phát nhạc Audio Demo
-    const audio = document.getElementById('audio-element');
-    const playBtn = document.getElementById('artwork-play-btn');
-    const playSvg = document.getElementById('play-btn-svg');
-
-    if (CURRENT_TRACK.audioPreview) {
-      audio.src = CURRENT_TRACK.audioPreview;
-      playBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (audio.paused) {
-          audio.play();
-          playSvg.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
-        } else {
-          audio.pause();
-          playSvg.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+      try {
+        const response = await fetch(`/api/release/${urlRelease}`);
+        if (!response.ok) {
+          throw new Error("Không tìm thấy dữ liệu bài hát");
         }
-      });
-      audio.addEventListener('ended', () => {
-        playSvg.innerHTML = `<path d="M8 5v14l11-7z"/>`;
-      });
-    } else {
-      playBtn.style.display = 'none';
+        
+        const data = await response.json();
+
+        // Cập nhật tiêu đề trang
+        const fullTitle = `${data.title} - UNDERSOUTHERN`;
+        document.getElementById('page-title').textContent = fullTitle;
+        document.getElementById('og-title').setAttribute('content', fullTitle);
+        document.getElementById('track-title').textContent = data.title;
+
+        if (data.cover_url) {
+          document.getElementById('track-cover').src = data.cover_url;
+          document.getElementById('bg-ambient').style.backgroundImage = `url(${data.cover_url})`;
+          document.getElementById('og-image').setAttribute('content', data.cover_url);
+        }
+
+        // Render toàn bộ 9 nền tảng
+        const listContainer = document.getElementById('platforms-list');
+        listContainer.innerHTML = '';
+
+        PLATFORM_CONFIG.forEach(platform => {
+          const platformUrl = data[platform.id];
+          const hasLink = platformUrl && platformUrl.trim() !== "";
+
+          const row = document.createElement(hasLink ? 'a' : 'div');
+          row.className = hasLink ? 'platform-row' : 'platform-row coming-soon';
+          
+          if (hasLink) {
+            row.href = platformUrl;
+            row.target = '_blank';
+            row.rel = 'noopener noreferrer';
+          }
+
+          row.innerHTML = `
+            <div class="platform-brand-wrap">
+              <img src="${platform.logo}" alt="${platform.name}" class="platform-logo-img">
+            </div>
+            <button class="play-action-btn" type="button">${hasLink ? 'Play' : 'Coming Soon'}</button>
+          `;
+          listContainer.appendChild(row);
+        });
+
+      } catch (error) {
+        console.error(error);
+        document.getElementById('main-card').innerHTML = '<div class="not-found">Không tìm thấy trang hoặc bản release này không tồn tại.</div>';
+      }
     }
+
+    loadReleaseData();
   </script>
 </body>
 </html>
