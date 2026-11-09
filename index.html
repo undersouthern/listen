@@ -127,7 +127,6 @@
       padding: 14px 16px;
     }
 
-    /* Dòng 1: Tên bài hát */
     .track-title-text {
       font-size: 0.95rem;
       font-weight: 700;
@@ -138,7 +137,6 @@
       text-overflow: ellipsis;
     }
 
-    /* Dòng 2: Tên nghệ sĩ */
     .track-artist-text {
       font-size: 0.82rem;
       font-weight: 500;
@@ -331,13 +329,12 @@
         
         const data = await response.json();
 
-        // Cập nhật tiêu đề trang (Title) kèm hậu tố thương hiệu
+        // 1. Cập nhật tiêu đề trang
         const fullTitle = `${data.title} - UNDERSOUTHERN`;
         document.getElementById('page-title').textContent = fullTitle;
         document.getElementById('og-title').setAttribute('content', fullTitle);
 
-        // Tách chuỗi title theo dấu gạch ngang (-) để phân tách Tên bài hát và Nghệ sĩ (nếu có)
-        // Ví dụ: "CHÀNG THI SĨ CẦM CA - chocoo" -> Dòng 1: "CHÀNG THI SĨ CẦM CA", Dòng 2: "chocoo"
+        // 2. Tách tên bài hát và nghệ sĩ (ví dụ: CHÀNG THI SĨ CẦM CA - chocoo)
         const parts = data.title.split("-").map(p => p.trim());
         const trackTitle = parts[0] || data.title;
         const trackArtist = parts.length > 1 ? parts.slice(1).join(" - ") : "";
@@ -351,14 +348,14 @@
           artistEl.style.display = "none";
         }
 
-        // Cập nhật ảnh bìa từ cột cover_url trong cơ sở dữ liệu D1
+        // 3. Hiển thị ảnh bìa trực tiếp từ cover_url (rất quan trọng)
         if (data.cover_url && data.cover_url.trim() !== "") {
           document.getElementById('track-cover').src = data.cover_url;
           document.getElementById('bg-ambient').style.backgroundImage = `url(${data.cover_url})`;
           document.getElementById('og-image').setAttribute('content', data.cover_url);
         }
 
-        // Render danh sách nền tảng
+        // 4. Render danh sách nền tảng (Có link -> Play, Trống -> Coming Soon)
         const listContainer = document.getElementById('platforms-list');
         listContainer.innerHTML = '';
 
