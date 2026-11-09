@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Manage & Update Smart Links | UNDERSOUTHERN</title>
+  <title>Update Smart Links | UNDERSOUTHERN</title>
 
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/undersouthern/my-images/main/logo-black.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,17 +46,14 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
     }
 
+    .sidebar-header {
+      margin-bottom: 15px;
+    }
+
     .sidebar-header h1 {
       font-size: 1.25rem;
       font-weight: 700;
       color: #111;
-      margin-bottom: 4px;
-    }
-
-    .sidebar-header p {
-      font-size: 0.81rem;
-      color: #666;
-      margin-bottom: 16px;
     }
 
     .search-input {
@@ -138,6 +135,12 @@
       text-overflow: ellipsis;
       font-weight: 500;
       margin-top: 2px;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .release-url-row:hover {
+      text-decoration: underline;
     }
 
     /* Right Column: Update Form */
@@ -343,8 +346,7 @@
     <!-- LEFT SIDEBAR: SEARCH & SMART LINKS LIST -->
     <div class="releases-sidebar">
       <div class="sidebar-header">
-        <h1>Smart Links</h1>
-        <p>Search and select a Smart Link to update information.</p>
+        <h1>Catalog</h1>
       </div>
 
       <input type="text" class="search-input" id="search-release-input" placeholder="🔍 Search Smart Link...">
@@ -493,7 +495,6 @@
         const div = document.createElement('div');
         div.className = 'release-item';
 
-        // Bóc tách Title và Artist nếu lưu theo định dạng "Title - Artist"
         let trackTitle = item.title || "";
         let trackArtist = "";
         if (trackTitle.includes(" - ")) {
@@ -502,12 +503,13 @@
           trackArtist = parts.slice(1).join(" - ").trim();
         }
 
-        // Hiển thị đầy đủ domain kết hợp với url_release
+        const fullUrl = `https://listen.undersouthern.asia/${item.url_release}`;
+
         div.innerHTML = `
           <div class="release-info">
             <div class="release-title-row"><strong>Title:</strong> ${trackTitle}</div>
             ${trackArtist ? `<div class="release-artist-row"><strong>Artist:</strong> ${trackArtist}</div>` : ''}
-            <div class="release-url-row">https://listen.undersouthern.asia/${item.url_release}</div>
+            <a href="${fullUrl}" target="_blank" class="release-url-row" onclick="event.stopPropagation()">${fullUrl}</a>
           </div>
         `;
 
