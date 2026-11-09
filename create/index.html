@@ -333,7 +333,7 @@
           <div class="phone-track-name" id="preview-track-title"></div>
         </div>
         <div class="phone-platforms" id="preview-platforms-list">
-          <!-- Render chuẩn logo từ thư mục assets -->
+          <!-- Render chuẩn logo từ GitHub raw URL -->
         </div>
       </div>
     </div>
@@ -341,20 +341,22 @@
   </div>
 
   <script>
-    // Khai báo danh sách logo nền tảng từ thư mục assets
+    // Danh sách logo sử dụng URL tuyệt đối từ GitHub chính thức
     const PREVIEW_PLATFORMS = [
-      { name: "Spotify", logo: "assets/logo-spotify.png" },
-      { name: "Apple Music", logo: "assets/logo-apple-music.png" },
-      { name: "Amazon Music", logo: "assets/logo-amazon-music.png" },
-      { name: "SoundCloud", logo: "assets/logo-soundcloud.png" },
-      { name: "Deezer", logo: "assets/logo-deezer.png" },
-      { name: "YouTube", logo: "assets/logo-youtube.png" },
-      { name: "YouTube Music", logo: "assets/logo-youtube-music.png" },
-      { name: "Zing MP3", logo: "assets/logo-zingmp3.png" },
-      { name: "NhacCuaTui", logo: "assets/logo-nct.png" }
+      { name: "Spotify", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-spotify.png" },
+      { name: "Apple Music", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-apple-music.png" },
+      { name: "Amazon Music", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-amazon-music.png" },
+      { name: "SoundCloud", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-soundcloud.png" },
+      { name: "Deezer", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-deezer.png" },
+      { name: "YouTube", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-youtube.png" },
+      { name: "YouTube Music", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-youtube-music.png" },
+      { name: "Zing MP3", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-zingmp3.png" },
+      { name: "NhacCuaTui", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-nct.png" }
     ];
 
     const platformsContainer = document.getElementById('preview-platforms-list');
+    platformsContainer.innerHTML = '';
+    
     PREVIEW_PLATFORMS.forEach(item => {
       const row = document.createElement('div');
       row.className = 'phone-row';
