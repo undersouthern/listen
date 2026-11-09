@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Smart-Link Setup | UNDERSOUTHERN</title>
+  <title>Create Release Page | UNDERSOUTHERN</title>
 
   <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/undersouthern/my-images/main/logo-black.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -84,19 +84,139 @@
 
     .form-input {
       width: 100%;
+      border: none;
+      background: transparent;
       padding: 9px 12px;
-      background: #fafbfc;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
       font-size: 0.88rem;
       color: #111;
       outline: none;
+    }
+
+    /* Khung nhập liệu Image kèm nút xóa ẩn mặc định, chỉ hiện khi đã chọn ảnh */
+    .image-upload-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .upload-box-small {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 12px;
+      background: #fafbfc;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      color: #333;
+      transition: border-color 0.15s;
+      flex: 1;
+    }
+
+    .upload-box-small:hover {
+      border-color: #7c3aed;
+    }
+
+    .upload-box-small input[type="file"] {
+      display: none;
+    }
+
+    .delete-img-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: none; /* Mặc định ẩn hoàn toàn */
+      align-items: center;
+      justify-content: center;
+      color: #ef4444;
+      transition: color 0.15s;
+    }
+
+    .delete-img-btn.show {
+      display: flex; /* Chỉ hiển thị khi có ảnh */
+    }
+
+    .delete-img-btn:hover {
+      color: #dc2626;
+    }
+
+    /* Khung nhập liệu Music Services có logo ở bên trái */
+    .service-input-wrapper {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      background: #fafbfc;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      overflow: hidden;
       transition: border-color 0.15s;
     }
 
-    .form-input:focus {
+    .service-input-wrapper:focus-within {
       border-color: #7c3aed;
       background: #fff;
+    }
+
+    .service-logo-box {
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 130px;
+      max-width: 130px;
+      height: 38px;
+      border-right: 1px solid #e5e7eb;
+      background: #f8f9fa;
+    }
+
+    .service-logo-img {
+      max-height: 18px;
+      max-width: 105px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Group URL Landing Page ghép đôi dạng hộp */
+    .url-group-wrapper {
+      display: flex;
+      width: 100%;
+      background: #fafbfc;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .url-group-wrapper:focus-within {
+      border-color: #7c3aed;
+      background: #fff;
+    }
+
+    .url-prefix {
+      padding: 9px 10px 9px 12px;
+      background: #f1f3f5;
+      color: #555;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-right: 1px solid #d1d5db;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      user-select: none;
+    }
+
+    .url-suffix-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 9px 12px;
+      font-size: 0.88rem;
+      color: #111;
+      outline: none;
     }
 
     .save-btn {
@@ -153,14 +273,13 @@
       overflow-y: auto;
       overflow-x: hidden;
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
 
     .phone-mockup::-webkit-scrollbar {
-      width: 4px;
-    }
-    .phone-mockup::-webkit-scrollbar-thumb {
-      background: #444;
-      border-radius: 4px;
+      display: none;
     }
 
     .phone-cover-box {
@@ -174,6 +293,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
 
     .phone-track-info {
@@ -239,82 +359,107 @@
     <!-- LEFT: SETUP FORM -->
     <div class="setup-form-container">
       <div class="form-header">
-        <h1>Smart-Link Setup</h1>
-        <p>Set your Smart Link URL, cover image, title, and platform destinations</p>
+        <h1>Create Release Page</h1>
+        <p>Customize your release page with a URL, cover artwork, title, and streaming platform links.</p>
       </div>
 
       <form id="smartlink-form">
-        <div class="section-title">General Information</div>
-
+        <div class="section-title">Image</div>
         <div class="form-group">
-          <label class="form-label">ID Title</label>
-          <input type="text" class="form-input" id="input-id-title">
+          <div class="image-upload-row">
+            <label class="upload-box-small">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span id="upload-filename">Choose Cover Image</span>
+              <input type="file" id="cover-file-input" accept="image/*">
+            </label>
+            <button type="button" id="delete-img-btn" class="delete-img-btn" title="Xóa ảnh">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
         </div>
+
+        <div class="section-title">Title</div>
 
         <div class="form-group">
           <label class="form-label">Title</label>
-          <input type="text" class="form-input" id="input-title">
+          <input type="text" class="form-input" id="input-title" style="background:#fafbfc; border:1px solid #d1d5db; border-radius:6px;">
+        </div>
+
+        <div class="section-title">Music Services</div>
+
+        <div class="form-group">
+          <div class="service-input-wrapper">
+            <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-spotify.png" alt="Spotify" class="service-logo-img"></div>
+            <input type="text" class="form-input" placeholder="Spotify URL">
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Artist</label>
-          <input type="text" class="form-input" id="input-artist">
-        </div>
-
-        <div class="section-title">Streaming Destinations</div>
-
-        <div class="form-group">
-          <label class="form-label">Spotify URL</label>
-          <input type="text" class="form-input">
+          <div class="service-input-wrapper">
+            <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-apple-music.png" alt="Apple Music" class="service-logo-img"></div>
+            <input type="text" class="form-input" placeholder="Apple Music URL">
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Apple Music URL</label>
-          <input type="text" class="form-input">
+          <div class="service-input-wrapper">
+            <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-amazon-music.png" alt="Amazon Music" class="service-logo-img"></div>
+            <input type="text" class="form-input" placeholder="Amazon Music URL">
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Amazon Music URL</label>
-          <input type="text" class="form-input">
+          <div class="service-input-wrapper">
+            <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-soundcloud.png" alt="SoundCloud" class="service-logo-img"></div>
+            <input type="text" class="form-input" placeholder="SoundCloud URL">
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">SoundCloud URL</label>
-          <input type="text" class="form-input">
+          <div class="service-input-wrapper">
+            <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-deezer.png" alt="Deezer" class="service-logo-img"></div>
+            <input type="text" class="form-input" placeholder="Deezer URL">
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Deezer URL</label>
-          <input type="text" class="form-input">
+          <div class="service-input-wrapper">
+            <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-youtube.png" alt="YouTube" class="service-logo-img"></div>
+            <input type="text" class="form-input" placeholder="YouTube URL">
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">YouTube URL</label>
-          <input type="text" class="form-input">
+          <div class="service-input-wrapper">
+            <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-youtube-music.png" alt="YouTube Music" class="service-logo-img"></div>
+            <input type="text" class="form-input" placeholder="YouTube Music URL">
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">YouTube Music URL</label>
-          <input type="text" class="form-input">
+          <div class="service-input-wrapper">
+            <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-zingmp3.png" alt="Zing MP3" class="service-logo-img"></div>
+            <input type="text" class="form-input" placeholder="Zing MP3 URL">
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Zing MP3 URL</label>
-          <input type="text" class="form-input">
+          <div class="service-input-wrapper">
+            <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-nct.png" alt="NhacCuaTui" class="service-logo-img"></div>
+            <input type="text" class="form-input" placeholder="NhacCuaTui URL">
+          </div>
         </div>
 
+        <div class="section-title">Custom URL</div>
         <div class="form-group">
-          <label class="form-label">NhacCuaTui URL</label>
-          <input type="text" class="form-input">
+          <label class="form-label">Public URL</label>
+          <div class="url-group-wrapper">
+            <span class="url-prefix">https://listen.undersouthern.asia/</span>
+            <input type="text" class="url-suffix-input" id="input-url-suffix">
+          </div>
         </div>
 
-        <div class="section-title">Landing Page Custom URL</div>
-        <div class="form-group">
-          <label class="form-label">URL Landing Page</label>
-          <input type="text" class="form-input">
-        </div>
-
-        <button type="submit" class="save-btn">Save Smart Link</button>
+        <button type="submit" class="save-btn">Create</button>
       </form>
     </div>
 
@@ -327,7 +472,7 @@
 
       <div class="phone-mockup">
         <div class="phone-cover-box">
-          <img class="phone-cover-img" alt="Cover">
+          <img class="phone-cover-img" id="preview-cover-img" alt="Cover">
         </div>
         <div class="phone-track-info">
           <div class="phone-track-name" id="preview-track-title"></div>
@@ -341,7 +486,31 @@
   </div>
 
   <script>
-    // Danh sách logo sử dụng URL tuyệt đối từ GitHub chính thức
+    const coverFileInput = document.getElementById('cover-file-input');
+    const previewCoverImg = document.getElementById('preview-cover-img');
+    const uploadFilename = document.getElementById('upload-filename');
+    const deleteImgBtn = document.getElementById('delete-img-btn');
+
+    coverFileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          previewCoverImg.src = event.target.result;
+          uploadFilename.textContent = file.name;
+          deleteImgBtn.classList.add('show'); // Hiện nút thùng rác khi đã up ảnh
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+
+    deleteImgBtn.addEventListener('click', function() {
+      coverFileInput.value = '';
+      previewCoverImg.src = '';
+      uploadFilename.textContent = 'Choose Cover Image';
+      deleteImgBtn.classList.remove('show'); // Ẩn nút thùng rác khi xóa ảnh
+    });
+
     const PREVIEW_PLATFORMS = [
       { name: "Spotify", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-spotify.png" },
       { name: "Apple Music", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-apple-music.png" },
