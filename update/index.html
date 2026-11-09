@@ -24,24 +24,23 @@
       background-color: #f4f6f8;
       color: #1a1a1a;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 30px 20px;
+      justify-content: flex-start; /* Căn sát mép trái */
+      align-items: flex-start;     /* Căn ở phía trên */
+      padding: 30px 25px;
     }
 
     .setup-layout {
       display: flex;
       width: 100%;
-      max-width: 900px;
+      max-width: 410px; /* Ban đầu chỉ vừa khít cột Catalog bên trái */
       gap: 35px;
       align-items: flex-start;
-      justify-content: center;
+      justify-content: flex-start;
       transition: max-width 0.3s ease;
     }
 
     .setup-layout.active-form {
-      max-width: 1200px;
-      justify-content: space-between;
+      max-width: 1200px; /* Khi chọn bài thì mở rộng khung để chứa thêm form bên phải */
     }
 
     /* Left Column: Search & Smart Links List */
@@ -52,7 +51,7 @@
       border-radius: 10px;
       padding: 24px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-      transition: all 0.3s ease;
+      flex-shrink: 0;
     }
 
     .sidebar-header {
