@@ -88,37 +88,6 @@
       display: block;
     }
 
-    /* Play Button Overlay on Artwork */
-    .artwork-play-btn {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.9);
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
-      transition: transform 0.2s ease, background 0.2s;
-    }
-
-    .artwork-play-btn:hover {
-      transform: translate(-50%, -50%) scale(1.06);
-      background: #ffffff;
-    }
-
-    .artwork-play-btn svg {
-      width: 26px;
-      height: 26px;
-      fill: #111111;
-      margin-left: 3px;
-    }
-
     /* Track Info Bar */
     .track-info-bar {
       background-color: #2b2b2b;
@@ -205,27 +174,32 @@
       padding: 7px 16px;
       font-size: 0.78rem;
       font-weight: 500;
-      color: #555555;
-      border: 1px solid #dcdfe4;
       border-radius: 6px;
-      background: #ffffff;
       transition: all 0.2s ease;
       white-space: nowrap;
-      cursor: pointer;
       outline: none;
     }
 
-    .platform-row:not(.coming-soon) .play-action-btn:hover {
+    /* Nút PLAY có link */
+    .platform-row:not(.coming-soon) .play-action-btn {
+      background: #ffffff;
+      color: #555555;
+      border: 1px solid #dcdfe4;
+      cursor: pointer;
+    }
+
+    .platform-row:not(.coming-soon):hover .play-action-btn {
       background: #9b51e0;
       color: #ffffff;
       border-color: #9b51e0;
       box-shadow: 0 2px 8px rgba(155, 81, 224, 0.35);
     }
 
+    /* Nút COMING SOON không có link */
     .platform-row.coming-soon .play-action-btn {
       color: #999999;
       background: #f4f6f8;
-      border-color: #e5e7eb;
+      border: 1px solid #e5e7eb;
       cursor: default;
     }
 
@@ -268,12 +242,9 @@
   <div class="smartlink-container">
     <div class="card-wrapper" id="main-card">
 
-      <!-- Cover Artwork & Center Play Button -->
+      <!-- Cover Artwork Container -->
       <div class="cover-container">
         <img class="cover-img" id="track-cover" src="" alt="Cover Artwork">
-        <button class="artwork-play-btn" id="artwork-play-btn" aria-label="Nghe thử" style="display: none;">
-          <svg viewBox="0 0 24 24" id="play-btn-svg"><path d="M8 5v14l11-7z"/></svg>
-        </button>
       </div>
 
       <!-- Info Bar -->
@@ -296,8 +267,6 @@
       </a>
     </footer>
   </div>
-
-  <audio id="audio-element" preload="none"></audio>
 
   <script>
     const PLATFORM_CONFIG = [
@@ -334,7 +303,7 @@
         document.getElementById('page-title').textContent = fullTitle;
         document.getElementById('og-title').setAttribute('content', fullTitle);
 
-        // 2. Tách tên bài hát và nghệ sĩ (ví dụ: CHÀNG THI SĨ CẦM CA - chocoo)
+        // 2. Tách tên bài hát và nghệ sĩ (Ví dụ: CHÀNG THI SĨ CẦM CA - chocoo)
         const parts = data.title.split("-").map(p => p.trim());
         const trackTitle = parts[0] || data.title;
         const trackArtist = parts.length > 1 ? parts.slice(1).join(" - ") : "";
@@ -348,14 +317,14 @@
           artistEl.style.display = "none";
         }
 
-        // 3. Hiển thị ảnh bìa trực tiếp từ cover_url (rất quan trọng)
+        // 3. Hiển thị ảnh bìa trực tiếp từ R2 Public Development URL
         if (data.cover_url && data.cover_url.trim() !== "") {
           document.getElementById('track-cover').src = data.cover_url;
           document.getElementById('bg-ambient').style.backgroundImage = `url(${data.cover_url})`;
           document.getElementById('og-image').setAttribute('content', data.cover_url);
         }
 
-        // 4. Render danh sách nền tảng (Có link -> Play, Trống -> Coming Soon)
+        // 4. Render danh sách nền tảng (Có link -> PLAY, Trống -> COMING SOON)
         const listContainer = document.getElementById('platforms-list');
         listContainer.innerHTML = '';
 
@@ -376,7 +345,7 @@
             <div class="platform-brand-wrap">
               <img src="${platform.logo}" alt="${platform.name}" class="platform-logo-img">
             </div>
-            <button class="play-action-btn" type="button">${hasLink ? 'Play' : 'Coming Soon'}</button>
+            <button class="play-action-btn" type="button">${hasLink ? 'PLAY' : 'COMING SOON'}</button>
           `;
           listContainer.appendChild(row);
         });
