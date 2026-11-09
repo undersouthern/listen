@@ -10,7 +10,7 @@ export default {
         
         const title = formData.get("title");
         const url_release = formData.get("url_release");
-        const id_title = formData.get("id_title") || url_release; // Sử dụng fallback nếu id_title trống
+        const id_title = formData.get("id_title") || url_release;
 
         const url_spotify = formData.get("url_spotify");
         const url_apple_music_music = formData.get("url_apple_music_music");
@@ -91,29 +91,43 @@ export default {
       }
     }
 
-    // 3. Xử lý định tuyến các file tĩnh từ GitHub repository
-    // Chuẩn hóa root path về index.html (cho phép truy cập trang release khi gõ slug trên URL)
+    // 3. Xử lý phục vụ file ảnh lưu trong R2 Bucket khi truy cập đường dẫn /covers/...
+    if (pathname.startsWith("/covers/")) {
+      const fileKey = pathname.substring(1); // Cắt bỏ dấu / ở đầu để lấy key chuẩn trong R2
+      const object = await env.MY_BUCKET.get(fileKey);
+
+      if (!object) {
+        return new Response("Image not found in R2", { status: 404 });
+      }
+
+      const headers = new Headers();
+      headers.set("Access-Control-Allow-Origin", "*");
+      headers.set("Cache-Control", "public, max-age=31536000"); // Cache ảnh 1 năm
+      if (object.httpMetadata && object.httpMetadata.contentType) {
+        headers.set("Content-Type", object.httpMetadata.contentType);
+      }
+
+      return new Response(object.body, { headers });
+    }
+
+    // 4. Xử lý định tuyến các file tĩnh từ GitHub repository
     if (pathname === "/" || pathname === "") {
       pathname = "/index.html";
     } else {
-      // Nếu truy cập các đường dẫn slug dạng /nguoi-lon, Worker sẽ phục vụ file /index.html để frontend xử lý router
       const pathSegments = pathname.split("/").filter(Boolean);
       if (pathSegments.length === 1 && pathSegments[0] !== "create" && !pathSegments[0].includes(".")) {
         pathname = "/index.html";
       }
     }
 
-    // Xử lý route cho trang tạo smart-link trong thư mục create
     if (pathname === "/create" || pathname === "/create/") {
       pathname = "/create/index.html";
     }
 
-    // Đảm bảo pathname luôn bắt đầu bằng dấu /
     if (!pathname.startsWith("/")) {
       pathname = "/" + pathname;
     }
 
-    // URL file raw từ GitHub repository listen
     const githubRawUrl = `https://raw.githubusercontent.com/undersouthern/listen/main${pathname}`;
 
     const response = await fetch(githubRawUrl, {
@@ -129,7 +143,6 @@ export default {
       });
     }
 
-    // Xác định chính xác Content-Type cho từng loại file
     const headers = new Headers();
     headers.set("Access-Control-Allow-Origin", "*");
     headers.set("Cache-Control", "public, max-age=300"); // Cache 5 phút
@@ -149,7 +162,6 @@ export default {
     } else if (pathname.endsWith(".json")) {
       headers.set("Content-Type", "application/json; charset=UTF-8");
     } else {
-      // Giữ nguyên content-type gốc nếu là file khác
       const originType = response.headers.get("Content-Type");
       if (originType) headers.set("Content-Type", originType);
     }
