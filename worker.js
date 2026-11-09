@@ -3,35 +3,45 @@ export default {
     const url = new URL(request.url);
     let pathname = url.pathname;
 
-    // 1. Xử lý API tạo smart-link từ form Create (/api/create) - Tự động sinh mã VNxxxxx
+    // 1. Xử lý API tạo smart-link từ form Create (/api/create) - Tự động sinh mã VNxxxxx hoặc nhận Custom URL
     if (request.method === "POST" && pathname === "/api/create") {
       try {
         const formData = await request.formData();
         
         const title = formData.get("title");
+        let customUrl = formData.get("url_release");
 
-        // Hàm sinh ngẫu nhiên VN + 5 chữ số (10000 đến 99999)
-        function generateRandomVNCode() {
-          const randomNum = Math.floor(10000 + Math.random() * 90000);
-          return `VN${randomNum}`;
-        }
+        let url_release = "";
+        let id_title = "";
 
-        // Vòng lặp kiểm tra đảm bảo mã sinh ra là duy nhất, tuyệt đối không trùng lặp trong D1
-        let uniqueCode = '';
-        let isDuplicate = true;
-        while (isDuplicate) {
-          uniqueCode = generateRandomVNCode();
-          const existing = await env.DB.prepare(
-            "SELECT id_title FROM landing_page WHERE id_title = ? OR url_release = ?"
-          ).bind(uniqueCode, uniqueCode).first();
-          
-          if (!existing) {
-            isDuplicate = false; // Mã hợp lệ, chưa tồn tại trong database
+        // Kiểm tra nếu người dùng có nhập Custom URL thì dùng, ngược lại tự động sinh mã VNxxxxx
+        if (customUrl && customUrl.trim() !== "") {
+          url_release = customUrl.trim();
+          id_title = formData.get("id_title") ? formData.get("id_title").trim() : url_release;
+        } else {
+          // Hàm sinh ngẫu nhiên VN + 5 chữ số (10000 đến 99999)
+          function generateRandomVNCode() {
+            const randomNum = Math.floor(10000 + Math.random() * 90000);
+            return `VN${randomNum}`;
           }
-        }
 
-        const url_release = uniqueCode;
-        const id_title = uniqueCode;
+          // Vòng lặp kiểm tra đảm bảo mã sinh ra là duy nhất, tuyệt đối không trùng lặp trong D1
+          let uniqueCode = '';
+          let isDuplicate = true;
+          while (isDuplicate) {
+            uniqueCode = generateRandomVNCode();
+            const existing = await env.DB.prepare(
+              "SELECT id_title FROM landing_page WHERE id_title = ? OR url_release = ?"
+            ).bind(uniqueCode, uniqueCode).first();
+            
+            if (!existing) {
+              isDuplicate = false; // Mã hợp lệ, chưa tồn tại trong database
+            }
+          }
+
+          url_release = uniqueCode;
+          id_title = uniqueCode;
+        }
 
         const url_spotify = formData.get("url_spotify");
         const url_apple_music_music = formData.get("url_apple_music_music");
@@ -220,7 +230,7 @@ export default {
       }
     }
 
-    // 5. Xử lý định tuyến các file tĩnh từ GitHub repository (Trỏ trang chủ về /dashboard/index.html)[cite: 2]
+    // 5. Xử lý định tuyến các file tĩnh từ GitHub repository (Trỏ trang chủ về /dashboard/index.html)
     if (pathname === "/" || pathname === "" || pathname === "/dashboard" || pathname === "/dashboard/") {
       pathname = "/dashboard/index.html";
     } else {
