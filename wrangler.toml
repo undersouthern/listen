@@ -13,7 +13,7 @@ database_id = "e337e2fb-6540-4a08-9632-bb1ddf799737"
 
 [[r2_buckets]]
 binding = "MY_BUCKET"
-bucket_name = "music-assets"
+bucket_name = "artwork-landing-page"
 
 [observability]
 enabled = true
