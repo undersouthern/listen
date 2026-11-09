@@ -3,7 +3,30 @@ export default {
     const url = new URL(request.url);
     let pathname = url.pathname;
 
-    // 1. Xử lý API tạo smart-link từ form Create (/api/create)
+    // 1. Xử lý phục vụ file ảnh lưu trong R2 Bucket khi truy cập đường dẫn /covers/...
+    if (pathname.startsWith("/covers/")) {
+      const fileKey = pathname.substring(1); // Lấy key chuẩn trong R2 (ví dụ: covers/173...)
+      try {
+        const object = await env.MY_BUCKET.get(fileKey);
+
+        if (!object) {
+          return new Response("Image not found in R2", { status: 404 });
+        }
+
+        const headers = new Headers();
+        headers.set("Access-Control-Allow-Origin", "*");
+        headers.set("Cache-Control", "public, max-age=31536000"); // Cache ảnh 1 năm
+        if (object.httpMetadata && object.httpMetadata.contentType) {
+          headers.set("Content-Type", object.httpMetadata.contentType);
+        }
+
+        return new Response(object.body, { headers });
+      } catch (err) {
+        return new Response("Error fetching image: " + err.message, { status: 500 });
+      }
+    }
+
+    // 2. Xử lý API tạo smart-link từ form Create (/api/create)
     if (request.method === "POST" && pathname === "/api/create") {
       try {
         const formData = await request.formData();
@@ -22,12 +45,12 @@ export default {
         const url_zingmp3 = formData.get("url_zingmp3");
         const url_nct = formData.get("url_nct");
 
-        // Xử lý upload file ảnh vào R2 bucket (artwork-landing-page thông qua binding MY_BUCKET)
+        // Xử lý upload file ảnh trực tiếp vào R2 bucket (artwork-landing-page)
         let cover_url = "";
         const coverImage = formData.get("cover_image");
         if (coverImage && typeof coverImage === "object" && coverImage.size > 0) {
           const fileName = `covers/${Date.now()}-${coverImage.name}`;
-          await env.MY_BUCKET.put(fileName, coverImage.stream(), {
+          await env.MY_BUCKET.put(fileName, coverImage, {
             httpMetadata: { contentType: coverImage.type }
           });
           cover_url = `https://listen.undersouthern.asia/${fileName}`;
@@ -65,7 +88,7 @@ export default {
       }
     }
 
-    // 2. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug)
+    // 3. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug)
     if (request.method === "GET" && pathname.startsWith("/api/release/")) {
       const slug = pathname.split("/").pop();
       try {
@@ -89,25 +112,6 @@ export default {
           headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
         });
       }
-    }
-
-    // 3. Xử lý phục vụ file ảnh lưu trong R2 Bucket khi truy cập đường dẫn /covers/...
-    if (pathname.startsWith("/covers/")) {
-      const fileKey = pathname.substring(1); // Cắt bỏ dấu / ở đầu để lấy key chuẩn trong R2
-      const object = await env.MY_BUCKET.get(fileKey);
-
-      if (!object) {
-        return new Response("Image not found in R2", { status: 404 });
-      }
-
-      const headers = new Headers();
-      headers.set("Access-Control-Allow-Origin", "*");
-      headers.set("Cache-Control", "public, max-age=31536000"); // Cache ảnh 1 năm
-      if (object.httpMetadata && object.httpMetadata.contentType) {
-        headers.set("Content-Type", object.httpMetadata.contentType);
-      }
-
-      return new Response(object.body, { headers });
     }
 
     // 4. Xử lý định tuyến các file tĩnh từ GitHub repository
