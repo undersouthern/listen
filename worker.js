@@ -34,7 +34,6 @@ export default {
             httpMetadata: { contentType: coverImage.type }
           });
           
-          // Sử dụng đúng Public Development URL từ R2 bucket của bạn
           const r2PublicDomain = "https://pub-3e105cf90fc140c484fbb8ece9b4271b.r2.dev";
           cover_url = `${r2PublicDomain}/${fileName}`;
         }
@@ -71,7 +70,25 @@ export default {
       }
     }
 
-    // 2. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug)
+    // 2. Xử lý API lấy danh sách tất cả các release (/api/releases) cho trang update
+    if (request.method === "GET" && pathname === "/api/releases") {
+      try {
+        const { results } = await env.DB.prepare(
+          "SELECT title, url_release FROM landing_page ORDER BY rowid DESC"
+        ).all();
+
+        return new Response(JSON.stringify(results || []), {
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), {
+          status: 500,
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+        });
+      }
+    }
+
+    // 3. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug)
     if (request.method === "GET" && pathname.startsWith("/api/release/")) {
       const slug = pathname.split("/").pop();
       try {
@@ -97,18 +114,108 @@ export default {
       }
     }
 
-    // 3. Xử lý định tuyến các file tĩnh từ GitHub repository
+    // 4. Xử lý API cập nhật thông tin smart-link (/api/update/:slug)
+    if (request.method === "POST" && pathname.startsWith("/api/update/")) {
+      const slug = pathname.split("/").pop();
+      try {
+        const formData = await request.formData();
+        
+        const title = formData.get("title");
+        const url_spotify = formData.get("url_spotify");
+        const url_apple_music_music = formData.get("url_apple_music_music");
+        const url_amazon_music = formData.get("url_amazon_music");
+        const url_soundcloud = formData.get("url_soundcloud");
+        const url_deezer = formData.get("url_deezer");
+        const url_youtube = formData.get("url_youtube");
+        const url_youtube_music = formData.get("url_youtube_music");
+        const url_zingmp3 = formData.get("url_zingmp3");
+        const url_nct = formData.get("url_nct");
+
+        // Kiểm tra xem có upload ảnh mới hay không
+        const coverImage = formData.get("cover_image");
+        let updateQuery = "";
+        let bindParams = [];
+
+        if (coverImage && typeof coverImage === "object" && coverImage.size > 0) {
+          const safeName = coverImage.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+          const fileName = `covers/${Date.now()}-${safeName}`;
+          
+          const arrayBuffer = await coverImage.arrayBuffer();
+          await env.MY_BUCKET.put(fileName, arrayBuffer, {
+            httpMetadata: { contentType: coverImage.type }
+          });
+          
+          const r2PublicDomain = "https://pub-3e105cf90fc140c484fbb8ece9b4271b.r2.dev";
+          const cover_url = `${r2PublicDomain}/${fileName}`;
+
+          updateQuery = `
+            UPDATE landing_page SET 
+              title = ?, cover_url = ?, 
+              url_spotify = ?, url_apple_music_music = ?, url_amazon_music = ?, 
+              url_soundcloud = ?, url_deezer = ?, url_youtube = ?, 
+              url_youtube_music = ?, url_zingmp3 = ?, url_nct = ?
+            WHERE url_release = ?
+          `;
+          bindParams = [
+            title, cover_url,
+            url_spotify, url_apple_music_music, url_amazon_music,
+            url_soundcloud, url_deezer, url_youtube,
+            url_youtube_music, url_zingmp3, url_nct,
+            slug
+          ];
+        } else {
+          updateQuery = `
+            UPDATE landing_page SET 
+              title = ?, 
+              url_spotify = ?, url_apple_music_music = ?, url_amazon_music = ?, 
+              url_soundcloud = ?, url_deezer = ?, url_youtube = ?, 
+              url_youtube_music = ?, url_zingmp3 = ?, url_nct = ?
+            WHERE url_release = ?
+          `;
+          bindParams = [
+            title,
+            url_spotify, url_apple_music_music, url_amazon_music,
+            url_soundcloud, url_deezer, url_youtube,
+            url_youtube_music, url_zingmp3, url_nct,
+            slug
+          ];
+        }
+
+        await env.DB.prepare(updateQuery).bind(...bindParams).run();
+
+        return new Response(JSON.stringify({ success: true, url_release: slug }), {
+          headers: { 
+            "Content-Type": "application/json; charset=UTF-8",
+            "Access-Control-Allow-Origin": "*"
+          }
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ success: false, error: error.message }), {
+          status: 500,
+          headers: { 
+            "Content-Type": "application/json; charset=UTF-8",
+            "Access-Control-Allow-Origin": "*"
+          }
+        });
+      }
+    }
+
+    // 5. Xử lý định tuyến các file tĩnh từ GitHub repository
     if (pathname === "/" || pathname === "") {
       pathname = "/index.html";
     } else {
       const pathSegments = pathname.split("/").filter(Boolean);
-      if (pathSegments.length === 1 && pathSegments[0] !== "create" && !pathSegments[0].includes(".")) {
+      if (pathSegments.length === 1 && pathSegments[0] !== "create" && pathSegments[0] !== "update" && !pathSegments[0].includes(".")) {
         pathname = "/index.html";
       }
     }
 
     if (pathname === "/create" || pathname === "/create/") {
       pathname = "/create/index.html";
+    }
+
+    if (pathname === "/update" || pathname === "/update/") {
+      pathname = "/update/index.html";
     }
 
     if (!pathname.startsWith("/")) {
