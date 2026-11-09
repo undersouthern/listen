@@ -199,12 +199,12 @@ export default {
       }
     }
 
-    // 5. Xử lý định tuyến các file tĩnh từ GitHub repository
+    // 5. Xử lý định tuyến các file tĩnh từ GitHub repository (Dashboard, Create, Update, Public Release Pages)
     if (pathname === "/" || pathname === "") {
       pathname = "/index.html";
     } else {
       const pathSegments = pathname.split("/").filter(Boolean);
-      // Đã thêm điều kiện loại trừ "create" và "update" để Worker nhận diện đúng file tĩnh
+      // Loại trừ các route quản trị hệ thống khỏi việc bị ép về index.html (trang chủ hiển thị Smart Link cá nhân)
       if (pathSegments.length === 1 && pathSegments[0] !== "create" && pathSegments[0] !== "update" && !pathSegments[0].includes(".")) {
         pathname = "/index.html";
       }
