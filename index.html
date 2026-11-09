@@ -79,6 +79,7 @@
       aspect-ratio: 1 / 1;
       background-color: #000;
       overflow: hidden;
+      cursor: pointer;
     }
 
     .cover-img {
@@ -86,6 +87,45 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .cover-container:hover .cover-img {
+      transform: scale(1.03);
+    }
+
+    /* Center Play Overlay Icon */
+    .center-play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      transition: all 0.2s ease;
+      z-index: 2;
+    }
+
+    .center-play-btn:hover {
+      background: rgba(124, 58, 237, 0.9);
+      border-color: #ffffff;
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .center-play-btn svg {
+      width: 26px;
+      height: 26px;
+      fill: #ffffff;
+      margin-left: 3px;
     }
 
     /* Track Info Bar */
@@ -242,9 +282,12 @@
   <div class="smartlink-container">
     <div class="card-wrapper" id="main-card">
 
-      <!-- Cover Artwork Container -->
-      <div class="cover-container">
+      <!-- Cover Artwork Container with Center Play Icon Overlay -->
+      <div class="cover-container" id="cover-container-btn" title="Phát nhạc">
         <img class="cover-img" id="track-cover" src="" alt="Cover Artwork">
+        <div class="center-play-btn">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
       </div>
 
       <!-- Info Bar -->
@@ -324,7 +367,27 @@
           document.getElementById('og-image').setAttribute('content', data.cover_url);
         }
 
-        // 4. Render danh sách nền tảng (Có link -> PLAY, Trống -> COMING SOON)
+        // 4. Tìm link phát nhạc đầu tiên khả dụng để gán cho nút Play lớn ở giữa ảnh
+        let firstPlayableUrl = "";
+        for (const platform of PLATFORM_CONFIG) {
+          const u = data[platform.id];
+          if (u && u.trim() !== "") {
+            firstPlayableUrl = u.trim();
+            break;
+          }
+        }
+
+        // Gán sự kiện click cho khung ảnh/nút Play lớn ở giữa để chuyển trang trực tiếp
+        const coverContainerBtn = document.getElementById('cover-container-btn');
+        coverContainerBtn.addEventListener('click', function() {
+          if (firstPlayableUrl) {
+            window.location.href = firstPlayableUrl; // Chuyển hướng trực tiếp ngay trên trang hiện tại
+          } else {
+            alert('Hiện chưa có liên kết phát nhạc cho bản release này.');
+          }
+        });
+
+        // 5. Render danh sách nền tảng (Có link -> PLAY, Trống -> COMING SOON)
         const listContainer = document.getElementById('platforms-list');
         listContainer.innerHTML = '';
 
@@ -336,9 +399,7 @@
           row.className = hasLink ? 'platform-row' : 'platform-row coming-soon';
           
           if (hasLink) {
-            row.href = platformUrl;
-            row.target = '_blank';
-            row.rel = 'noopener noreferrer';
+            row.href = platformUrl; // Chuyển hướng trực tiếp ngay trên trang hiện tại, không mở tab mới
           }
 
           row.innerHTML = `
