@@ -2,17 +2,18 @@ name = "listen"
 main = "worker.js"
 compatibility_date = "2026-11-09"
 
-# Định tuyến trực tiếp về subdomain của label
 routes = [
   { pattern = "listen.undersouthern.asia/*", zone_name = "undersouthern.asia" }
 ]
 
-# Binding database D1 cho landing page
 [[d1_databases]]
 binding = "DB"
 database_name = "landing-page"
 database_id = "e337e2fb-6540-4a08-9632-bb1ddf799737"
 
-# Cấu hình quan sát và log
+[[r2_buckets]]
+binding = "MY_BUCKET"
+bucket_name = "music-assets"
+
 [observability]
 enabled = true
