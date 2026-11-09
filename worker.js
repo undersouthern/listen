@@ -65,10 +65,42 @@ export default {
       }
     }
 
-    // 2. Xử lý định tuyến các file tĩnh từ GitHub repository
-    // Chuẩn hóa root path về index.html
+    // 2. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug)
+    if (request.method === "GET" && pathname.startsWith("/api/release/")) {
+      const slug = pathname.split("/").pop();
+      try {
+        const { results } = await env.DB.prepare(
+          "SELECT * FROM landing_page WHERE url_release = ?"
+        ).bind(slug).all();
+
+        if (!results || results.length === 0) {
+          return new Response(JSON.stringify({ error: "Not found" }), {
+            status: 404,
+            headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+          });
+        }
+
+        return new Response(JSON.stringify(results[0]), {
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), {
+          status: 500,
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+        });
+      }
+    }
+
+    // 3. Xử lý định tuyến các file tĩnh từ GitHub repository
+    // Chuẩn hóa root path về index.html (cho phép truy cập trang release khi gõ slug trên URL)
     if (pathname === "/" || pathname === "") {
       pathname = "/index.html";
+    } else {
+      // Nếu truy cập các đường dẫn slug dạng /nguoi-lon, Worker sẽ phục vụ file /index.html để frontend xử lý router
+      const pathSegments = pathname.split("/").filter(Boolean);
+      if (pathSegments.length === 1 && pathSegments[0] !== "create" && !pathSegments[0].includes(".")) {
+        pathname = "/index.html";
+      }
     }
 
     // Xử lý route cho trang tạo smart-link trong thư mục create
