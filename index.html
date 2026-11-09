@@ -318,19 +318,20 @@
         
         const data = await response.json();
 
-        // Cập nhật tiêu đề trang
+        // 1. Cập nhật tiêu đề trang (Title) kèm hậu tố thương hiệu
         const fullTitle = `${data.title} - UNDERSOUTHERN`;
         document.getElementById('page-title').textContent = fullTitle;
         document.getElementById('og-title').setAttribute('content', fullTitle);
         document.getElementById('track-title').textContent = data.title;
 
-        if (data.cover_url) {
+        // 2. Cập nhật ảnh bìa từ cột cover_url trong cơ sở dữ liệu D1
+        if (data.cover_url && data.cover_url.trim() !== "") {
           document.getElementById('track-cover').src = data.cover_url;
           document.getElementById('bg-ambient').style.backgroundImage = `url(${data.cover_url})`;
           document.getElementById('og-image').setAttribute('content', data.cover_url);
         }
 
-        // Render toàn bộ 9 nền tảng
+        // 3. Render danh sách nền tảng (Có link hiển thị Play, Không có link hiển thị Coming Soon)
         const listContainer = document.getElementById('platforms-list');
         listContainer.innerHTML = '';
 
