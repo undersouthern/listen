@@ -3,9 +3,14 @@ export default {
     const url = new URL(request.url);
     let pathname = url.pathname;
 
-    // Chuẩn hóa root path
+    // Chuẩn hóa root path về index.html
     if (pathname === "/" || pathname === "") {
       pathname = "/index.html";
+    }
+
+    // Xử lý route cho trang tạo smart-link trong thư mục create
+    if (pathname === "/create" || pathname === "/create/") {
+      pathname = "/create/index.html";
     }
 
     // Đảm bảo pathname luôn bắt đầu bằng dấu /
