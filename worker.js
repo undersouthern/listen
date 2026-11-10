@@ -1,7 +1,8 @@
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     let pathname = url.pathname;
+    const cache = caches.default;
 
     // Helper kiểm tra cookie đăng nhập
     const cookieHeader = request.headers.get("Cookie") || "";
@@ -14,7 +15,7 @@ export default {
         const email = formData.get("email");
         const pass = formData.get("pass");
 
-        // Kiểm tra thông tin trong bảng admin (email: label@undersouthern.asia, pass: Vinh19061998//)
+        // Kiểm tra thông tin trong bảng admin
         const adminUser = await env.DB.prepare(
           "SELECT * FROM admin WHERE email = ? AND pass = ?"
         ).bind(email, pass).first();
@@ -42,18 +43,28 @@ export default {
       }
     }
 
-    // 2. Bảo vệ các trang yêu cầu đăng nhập: /dashboard, /create, /update
-    const protectedPaths = ["/dashboard", "/create", "/update"];
-    const isProtected = protectedPaths.some(p => pathname === p || pathname.startsWith(p + "/"));
+    // 2. Bảo vệ các trang yêu cầu đăng nhập: /dashboard, /create, /update (bao gồm cả đường dẫn gốc "/")
+    const isRootOrDashboard = pathname === "/" || pathname === "" || pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+    const isCreateOrUpdate = pathname === "/create" || pathname.startsWith("/create/") || pathname === "/update" || pathname.startsWith("/update/");
 
-    if (isProtected && !isAuthenticated) {
-      // Chưa đăng nhập -> Chuyển hướng về trang /signin
+    if ((isRootOrDashboard || isCreateOrUpdate) && !isAuthenticated) {
       return Response.redirect(new URL("/signin", request.url), 302);
     }
 
     // 3. Xử lý API tạo smart-link từ form Create (/api/create)
     if (request.method === "POST" && pathname === "/api/create") {
+      if (!isAuthenticated) {
+        return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+        });
+      }
+
       try {
+        // Đảm bảo Database D1 đã được đánh Index để tốc độ truy vấn luôn nhanh nhất khi có hàng trăm nghìn bài
+        await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_landing_url_release ON landing_page(url_release)").run();
+        await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_landing_id_title ON landing_page(id_title)").run();
+
         const formData = await request.formData();
         const title = formData.get("title");
         let customUrl = formData.get("url_release");
@@ -105,7 +116,10 @@ export default {
           
           const arrayBuffer = await coverImage.arrayBuffer();
           await env.MY_BUCKET.put(fileName, arrayBuffer, {
-            httpMetadata: { contentType: coverImage.type }
+            httpMetadata: { 
+              contentType: coverImage.type,
+              cacheControl: "public, max-age=31536000, immutable"
+            }
           });
           
           const r2PublicDomain = "https://pub-3e105cf90fc140c484fbb8ece9b4271b.r2.dev";
@@ -137,15 +151,30 @@ export default {
       }
     }
 
-    // 4. Xử lý API lấy danh sách tất cả các release (/api/releases)
+    // 4. Xử lý API lấy danh sách các release (/api/releases) kèm hỗ trợ tìm kiếm & giới hạn phân trang
     if (request.method === "GET" && pathname === "/api/releases") {
       try {
-        const { results } = await env.DB.prepare(
-          "SELECT title, url_release FROM landing_page ORDER BY rowid DESC"
-        ).all();
+        const keyword = url.searchParams.get("q");
+        const limit = parseInt(url.searchParams.get("limit") || "1000", 10);
+        const offset = parseInt(url.searchParams.get("offset") || "0", 10);
+
+        let query = "SELECT title, url_release FROM landing_page ORDER BY rowid DESC LIMIT ? OFFSET ?";
+        let params = [limit, offset];
+
+        if (keyword && keyword.trim() !== "") {
+          const searchPattern = `%${keyword.trim()}%`;
+          query = "SELECT title, url_release FROM landing_page WHERE title LIKE ? OR url_release LIKE ? ORDER BY rowid DESC LIMIT ? OFFSET ?";
+          params = [searchPattern, searchPattern, limit, offset];
+        }
+
+        const { results } = await env.DB.prepare(query).bind(...params).all();
 
         return new Response(JSON.stringify(results || []), {
-          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+          headers: { 
+            "Content-Type": "application/json; charset=UTF-8", 
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "no-store" 
+          }
         });
       } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), {
@@ -155,24 +184,46 @@ export default {
       }
     }
 
-    // 5. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug)
+    // 5. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug) - Tích hợp Cloudflare Edge Cache + Indexing
     if (request.method === "GET" && pathname.startsWith("/api/release/")) {
       const slug = pathname.split("/").pop();
-      try {
-        const { results } = await env.DB.prepare(
-          "SELECT * FROM landing_page WHERE url_release = ?"
-        ).bind(slug).all();
+      const cacheKey = new Request(url.toString(), request);
 
-        if (!results || results.length === 0) {
+      // Kiểm tra xem dữ liệu bài hát đã có sẵn trong Edge Cache chưa
+      let cachedResponse = await cache.match(cacheKey);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      try {
+        // Sử dụng .first() kết hợp Index để tốc độ truy vấn D1 đạt mức mili-giây
+        const record = await env.DB.prepare(
+          "SELECT * FROM landing_page WHERE url_release = ?"
+        ).bind(slug).first();
+
+        if (!record) {
           return new Response(JSON.stringify({ error: "Not found" }), {
             status: 404,
             headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
           });
         }
 
-        return new Response(JSON.stringify(results[0]), {
-          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+        const response = new Response(JSON.stringify(record), {
+          headers: { 
+            "Content-Type": "application/json; charset=UTF-8", 
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+          }
         });
+
+        // Lưu phản hồi vào Cloudflare Edge Cache mà không làm chậm luồng trả kết quả
+        if (ctx && ctx.waitUntil) {
+          ctx.waitUntil(cache.put(cacheKey, response.clone()));
+        } else {
+          await cache.put(cacheKey, response.clone());
+        }
+
+        return response;
       } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), {
           status: 500,
@@ -181,8 +232,15 @@ export default {
       }
     }
 
-    // 6. Xử lý API cập nhật thông tin smart-link (/api/update/:slug)
+    // 6. Xử lý API cập nhật thông tin smart-link (/api/update/:slug) - Tự động xóa Edge Cache cũ
     if (request.method === "POST" && pathname.startsWith("/api/update/")) {
+      if (!isAuthenticated) {
+        return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+        });
+      }
+
       const slug = pathname.split("/").pop();
       try {
         const formData = await request.formData();
@@ -208,7 +266,10 @@ export default {
           
           const arrayBuffer = await coverImage.arrayBuffer();
           await env.MY_BUCKET.put(fileName, arrayBuffer, {
-            httpMetadata: { contentType: coverImage.type }
+            httpMetadata: { 
+              contentType: coverImage.type,
+              cacheControl: "public, max-age=31536000, immutable"
+            }
           });
           
           const r2PublicDomain = "https://pub-3e105cf90fc140c484fbb8ece9b4271b.r2.dev";
@@ -249,6 +310,10 @@ export default {
 
         await env.DB.prepare(updateQuery).bind(...bindParams).run();
 
+        // Xóa ngay lập tức bản cache cũ của bài hát này trên Cloudflare Edge
+        const releaseCacheUrl = new URL(`/api/release/${slug}`, request.url).toString();
+        await cache.delete(new Request(releaseCacheUrl));
+
         return new Response(JSON.stringify({ success: true, url_release: slug }), {
           headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
         });
@@ -260,7 +325,7 @@ export default {
       }
     }
 
-    // 7. Định tuyến file tĩnh từ GitHub repository
+    // 7. Định tuyến file tĩnh từ GitHub repository (Kèm Cloudflare Cache cho file tĩnh)
     if (pathname === "/" || pathname === "" || pathname === "/dashboard" || pathname === "/dashboard/") {
       pathname = "/dashboard/index.html";
     } else {
@@ -289,7 +354,11 @@ export default {
     const githubRawUrl = `https://raw.githubusercontent.com/undersouthern/listen/main${pathname}`;
 
     const response = await fetch(githubRawUrl, {
-      headers: { "User-Agent": "Cloudflare-Worker" }
+      headers: { "User-Agent": "Cloudflare-Worker" },
+      cf: {
+        cacheTtl: 300,
+        cacheEverything: true
+      }
     });
 
     if (!response.ok) {
@@ -301,7 +370,7 @@ export default {
 
     const headers = new Headers();
     headers.set("Access-Control-Allow-Origin", "*");
-    headers.set("Cache-Control", "public, max-age=300");
+    headers.set("Cache-Control", "public, max-age=300, s-maxage=3600");
 
     if (pathname.endsWith(".html")) {
       headers.set("Content-Type", "text/html; charset=UTF-8");
