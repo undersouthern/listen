@@ -24,8 +24,8 @@
       background-color: #f4f6f8;
       color: #1a1a1a;
       display: flex;
-      justify-content: flex-start;
-      align-items: flex-start;
+      justify-content: center; /* Căn giữa màn hình giống trang create */
+      align-items: flex-start;  /* Căn ở phía trên */
       padding: 30px 20px;
     }
 
@@ -35,12 +35,12 @@
       max-width: 410px; /* Ban đầu chỉ vừa khít cột Catalog bên trái */
       gap: 35px;
       align-items: flex-start;
-      justify-content: flex-start;
+      justify-content: center;
       transition: max-width 0.3s ease;
     }
 
     .setup-layout.active-form {
-      max-width: 1150px; /* Mở rộng khung khi chọn bài để hiển thị thêm form bên phải */
+      max-width: 1150px; /* Mở rộng khung khi chọn bài để hiển thị thêm form bên phải, đồng bộ chuẩn 1150px của create */
     }
 
     /* Left Column: Search & Smart Links List */
