@@ -3,14 +3,89 @@ export default {
     const url = new URL(request.url);
     let pathname = url.pathname;
 
-    // 1. Xử lý API tạo smart-link từ form Create (/api/create)
+    // Helper kiểm tra cookie đăng nhập
+    const cookieHeader = request.headers.get("Cookie") || "";
+    const isAuthenticated = cookieHeader.includes("us_admin_auth=authenticated");
+
+    // 1. Xử lý API Đăng nhập (/api/login)
+    if (request.method === "POST" && pathname === "/api/login") {
+      try {
+        const formData = await request.formData();
+        const email = formData.get("email");
+        const pass = formData.get("pass");
+
+        // Kiểm tra thông tin trong bảng admin (email: label@undersouthern.asia, pass: Vinh19061998//)
+        const adminUser = await env.DB.prepare(
+          "SELECT * FROM admin WHERE email = ? AND pass = ?"
+        ).bind(email, pass).first();
+
+        if (!adminUser) {
+          return new Response(JSON.stringify({ success: false, error: "Email hoặc mật khẩu không chính xác!" }), {
+            status: 401,
+            headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+          });
+        }
+
+        // Đăng nhập thành công, thiết lập Cookie (tồn tại trong 7 ngày)
+        const headers = new Headers({
+          "Content-Type": "application/json; charset=UTF-8",
+          "Access-Control-Allow-Origin": "*",
+          "Set-Cookie": "us_admin_auth=authenticated; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800"
+        });
+
+        return new Response(JSON.stringify({ success: true }), { headers });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500,
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
+        });
+      }
+    }
+
+    // 2. Bảo vệ các trang yêu cầu đăng nhập: /dashboard, /create, /update
+    const protectedPaths = ["/dashboard", "/create", "/update"];
+    const isProtected = protectedPaths.some(p => pathname === p || pathname.startsWith(p + "/"));
+
+    if (isProtected && !isAuthenticated) {
+      // Chưa đăng nhập -> Chuyển hướng về trang /signin
+      return Response.redirect(new URL("/signin", request.url), 302);
+    }
+
+    // 3. Xử lý API tạo smart-link từ form Create (/api/create)
     if (request.method === "POST" && pathname === "/api/create") {
       try {
         const formData = await request.formData();
-        
         const title = formData.get("title");
-        const url_release = formData.get("url_release");
-        const id_title = formData.get("id_title") || url_release;
+        let customUrl = formData.get("url_release");
+
+        let url_release = "";
+        let id_title = "";
+
+        if (customUrl && customUrl.trim() !== "") {
+          url_release = customUrl.trim();
+          id_title = formData.get("id_title") ? formData.get("id_title").trim() : url_release;
+        } else {
+          function generateRandomVNCode() {
+            const randomNum = Math.floor(10000 + Math.random() * 90000);
+            return `VN${randomNum}`;
+          }
+
+          let uniqueCode = '';
+          let isDuplicate = true;
+          while (isDuplicate) {
+            uniqueCode = generateRandomVNCode();
+            const existing = await env.DB.prepare(
+              "SELECT id_title FROM landing_page WHERE id_title = ? OR url_release = ?"
+            ).bind(uniqueCode, uniqueCode).first();
+            
+            if (!existing) {
+              isDuplicate = false;
+            }
+          }
+
+          url_release = uniqueCode;
+          id_title = uniqueCode;
+        }
 
         const url_spotify = formData.get("url_spotify");
         const url_apple_music_music = formData.get("url_apple_music_music");
@@ -22,7 +97,6 @@ export default {
         const url_zingmp3 = formData.get("url_zingmp3");
         const url_nct = formData.get("url_nct");
 
-        // Xử lý upload file ảnh lên R2 bucket và lấy trực tiếp Public Development URL của R2
         let cover_url = "";
         const coverImage = formData.get("cover_image");
         if (coverImage && typeof coverImage === "object" && coverImage.size > 0) {
@@ -38,7 +112,6 @@ export default {
           cover_url = `${r2PublicDomain}/${fileName}`;
         }
 
-        // Thực thi câu lệnh SQL chèn dữ liệu vào bảng landing_page trong D1
         await env.DB.prepare(`
           INSERT INTO landing_page (
             id_title, title, cover_url, 
@@ -54,23 +127,17 @@ export default {
         ).run();
 
         return new Response(JSON.stringify({ success: true, url_release }), {
-          headers: { 
-            "Content-Type": "application/json; charset=UTF-8",
-            "Access-Control-Allow-Origin": "*"
-          }
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
         });
       } catch (error) {
         return new Response(JSON.stringify({ success: false, error: error.message }), {
           status: 500,
-          headers: { 
-            "Content-Type": "application/json; charset=UTF-8",
-            "Access-Control-Allow-Origin": "*"
-          }
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
         });
       }
     }
 
-    // 2. Xử lý API lấy danh sách tất cả các release (/api/releases) cho trang update
+    // 4. Xử lý API lấy danh sách tất cả các release (/api/releases)
     if (request.method === "GET" && pathname === "/api/releases") {
       try {
         const { results } = await env.DB.prepare(
@@ -88,7 +155,7 @@ export default {
       }
     }
 
-    // 3. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug)
+    // 5. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug)
     if (request.method === "GET" && pathname.startsWith("/api/release/")) {
       const slug = pathname.split("/").pop();
       try {
@@ -114,7 +181,7 @@ export default {
       }
     }
 
-    // 4. Xử lý API cập nhật thông tin smart-link (/api/update/:slug)
+    // 6. Xử lý API cập nhật thông tin smart-link (/api/update/:slug)
     if (request.method === "POST" && pathname.startsWith("/api/update/")) {
       const slug = pathname.split("/").pop();
       try {
@@ -183,28 +250,22 @@ export default {
         await env.DB.prepare(updateQuery).bind(...bindParams).run();
 
         return new Response(JSON.stringify({ success: true, url_release: slug }), {
-          headers: { 
-            "Content-Type": "application/json; charset=UTF-8",
-            "Access-Control-Allow-Origin": "*"
-          }
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
         });
       } catch (error) {
         return new Response(JSON.stringify({ success: false, error: error.message }), {
           status: 500,
-          headers: { 
-            "Content-Type": "application/json; charset=UTF-8",
-            "Access-Control-Allow-Origin": "*"
-          }
+          headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
         });
       }
     }
 
-    // 5. Xử lý định tuyến các file tĩnh từ GitHub repository (Trỏ trang chủ về /dashboard/index.html)[cite: 2]
+    // 7. Định tuyến file tĩnh từ GitHub repository
     if (pathname === "/" || pathname === "" || pathname === "/dashboard" || pathname === "/dashboard/") {
       pathname = "/dashboard/index.html";
     } else {
       const pathSegments = pathname.split("/").filter(Boolean);
-      if (pathSegments.length === 1 && pathSegments[0] !== "create" && pathSegments[0] !== "update" && pathSegments[0] !== "dashboard" && !pathSegments[0].includes(".")) {
+      if (pathSegments.length === 1 && pathSegments[0] !== "create" && pathSegments[0] !== "update" && pathSegments[0] !== "dashboard" && pathSegments[0] !== "signin" && !pathSegments[0].includes(".")) {
         pathname = "/index.html";
       }
     }
@@ -217,6 +278,10 @@ export default {
       pathname = "/update/index.html";
     }
 
+    if (pathname === "/signin" || pathname === "/signin/") {
+      pathname = "/signin/index.html";
+    }
+
     if (!pathname.startsWith("/")) {
       pathname = "/" + pathname;
     }
@@ -224,9 +289,7 @@ export default {
     const githubRawUrl = `https://raw.githubusercontent.com/undersouthern/listen/main${pathname}`;
 
     const response = await fetch(githubRawUrl, {
-      headers: {
-        "User-Agent": "Cloudflare-Worker"
-      }
+      headers: { "User-Agent": "Cloudflare-Worker" }
     });
 
     if (!response.ok) {
@@ -238,7 +301,7 @@ export default {
 
     const headers = new Headers();
     headers.set("Access-Control-Allow-Origin", "*");
-    headers.set("Cache-Control", "public, max-age=300"); // Cache 5 phút
+    headers.set("Cache-Control", "public, max-age=300");
 
     if (pathname.endsWith(".html")) {
       headers.set("Content-Type", "text/html; charset=UTF-8");
@@ -259,9 +322,6 @@ export default {
       if (originType) headers.set("Content-Type", originType);
     }
 
-    return new Response(response.body, {
-      status: 200,
-      headers: headers,
-    });
+    return new Response(response.body, { status: 200, headers: headers });
   },
 };
