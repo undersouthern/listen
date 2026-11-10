@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -24,9 +24,9 @@
       background-color: #f4f6f8;
       color: #1a1a1a;
       display: flex;
-      justify-content: flex-start; /* Căn sát mép trái */
-      align-items: flex-start;     /* Căn ở phía trên */
-      padding: 30px 25px;
+      justify-content: flex-start;
+      align-items: flex-start;
+      padding: 30px 20px;
     }
 
     .setup-layout {
@@ -40,7 +40,7 @@
     }
 
     .setup-layout.active-form {
-      max-width: 1200px; /* Khi chọn bài thì mở rộng khung để chứa thêm form bên phải */
+      max-width: 1150px; /* Mở rộng khung khi chọn bài để hiển thị thêm form bên phải */
     }
 
     /* Left Column: Search & Smart Links List */
@@ -59,7 +59,7 @@
     }
 
     .sidebar-header h1 {
-      font-size: 1.25rem;
+      font-size: 1.35rem;
       font-weight: 700;
       color: #111;
     }
@@ -212,6 +212,7 @@
       outline: none;
     }
 
+    /* Khung nhập liệu Image kèm nút xóa ẩn mặc định */
     .image-upload-row {
       display: flex;
       align-items: center;
@@ -229,7 +230,12 @@
       cursor: pointer;
       font-size: 0.84rem;
       color: #333;
+      transition: border-color 0.15s;
       flex: 1;
+    }
+
+    .upload-box-small:hover {
+      border-color: #7c3aed;
     }
 
     .upload-box-small input[type="file"] {
@@ -242,13 +248,21 @@
       cursor: pointer;
       padding: 6px;
       display: none;
+      align-items: center;
+      justify-content: center;
       color: #ef4444;
+      transition: color 0.15s;
     }
 
     .delete-img-btn.show {
       display: flex;
     }
 
+    .delete-img-btn:hover {
+      color: #dc2626;
+    }
+
+    /* Khung nhập liệu Music Services có logo ở bên trái */
     .service-input-wrapper {
       display: flex;
       align-items: center;
@@ -257,6 +271,7 @@
       border: 1px solid #d1d5db;
       border-radius: 6px;
       overflow: hidden;
+      transition: border-color 0.15s;
     }
 
     .service-input-wrapper:focus-within {
@@ -285,6 +300,7 @@
       display: block;
     }
 
+    /* Group URL Landing Page ghép đôi dạng hộp */
     .url-group-wrapper {
       display: flex;
       width: 100%;
@@ -292,6 +308,12 @@
       border: 1px solid #d1d5db;
       border-radius: 6px;
       overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .url-group-wrapper:focus-within {
+      border-color: #7c3aed;
+      background: #fff;
     }
 
     .url-prefix {
@@ -304,6 +326,7 @@
       white-space: nowrap;
       display: flex;
       align-items: center;
+      user-select: none;
     }
 
     .url-suffix-input {
@@ -326,7 +349,7 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      margin-top: 20px;
+      margin-top: 25px;
       transition: background 0.15s;
     }
 
@@ -345,7 +368,7 @@
         <h1>Catalog</h1>
       </div>
 
-      <input type="text" class="search-input" id="search-release-input" placeholder="🔍 Search Smart Link...">
+      <input type="text" class="search-input" id="search-release-input" placeholder="Search Smart Link...">
       <div class="releases-list-box" id="releases-list-container">
         <!-- Render dynamic list -->
       </div>
@@ -376,7 +399,7 @@
         <div class="section-title">Title</div>
         <div class="form-group">
           <label class="form-label">Title</label>
-          <input type="text" class="form-input" id="input-title" placeholder="Enter track title..." style="background:#fafbfc; border:1px solid #d1d5db; border-radius:6px;" required>
+          <input type="text" class="form-input" id="input-title" style="background:#fafbfc; border:1px solid #d1d5db; border-radius:6px;" required>
         </div>
 
         <div class="section-title">Music Services</div>
@@ -384,63 +407,63 @@
         <div class="form-group">
           <div class="service-input-wrapper">
             <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-spotify.png" alt="Spotify" class="service-logo-img"></div>
-            <input type="text" class="form-input" id="url-spotify" placeholder="Spotify URL (Optional)">
+            <input type="text" class="form-input" id="url-spotify" placeholder="Spotify URL (Tùy chọn)">
           </div>
         </div>
 
         <div class="form-group">
           <div class="service-input-wrapper">
             <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-apple-music.png" alt="Apple Music" class="service-logo-img"></div>
-            <input type="text" class="form-input" id="url-apple-music" placeholder="Apple Music URL (Optional)">
+            <input type="text" class="form-input" id="url-apple-music" placeholder="Apple Music URL (Tùy chọn)">
           </div>
         </div>
 
         <div class="form-group">
           <div class="service-input-wrapper">
             <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-amazon-music.png" alt="Amazon Music" class="service-logo-img"></div>
-            <input type="text" class="form-input" id="url-amazon-music" placeholder="Amazon Music URL (Optional)">
+            <input type="text" class="form-input" id="url-amazon-music" placeholder="Amazon Music URL (Tùy chọn)">
           </div>
         </div>
 
         <div class="form-group">
           <div class="service-input-wrapper">
             <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-soundcloud.png" alt="SoundCloud" class="service-logo-img"></div>
-            <input type="text" class="form-input" id="url-soundcloud" placeholder="SoundCloud URL (Optional)">
+            <input type="text" class="form-input" id="url-soundcloud" placeholder="SoundCloud URL (Tùy chọn)">
           </div>
         </div>
 
         <div class="form-group">
           <div class="service-input-wrapper">
             <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-deezer.png" alt="Deezer" class="service-logo-img"></div>
-            <input type="text" class="form-input" id="url-deezer" placeholder="Deezer URL (Optional)">
+            <input type="text" class="form-input" id="url-deezer" placeholder="Deezer URL (Tùy chọn)">
           </div>
         </div>
 
         <div class="form-group">
           <div class="service-input-wrapper">
             <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-youtube.png" alt="YouTube" class="service-logo-img"></div>
-            <input type="text" class="form-input" id="url-youtube" placeholder="YouTube URL (Optional)">
+            <input type="text" class="form-input" id="url-youtube" placeholder="YouTube URL (Tùy chọn)">
           </div>
         </div>
 
         <div class="form-group">
           <div class="service-input-wrapper">
             <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-youtube-music.png" alt="YouTube Music" class="service-logo-img"></div>
-            <input type="text" class="form-input" id="url-youtube-music" placeholder="YouTube Music URL (Optional)">
+            <input type="text" class="form-input" id="url-youtube-music" placeholder="YouTube Music URL (Tùy chọn)">
           </div>
         </div>
 
         <div class="form-group">
           <div class="service-input-wrapper">
             <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-zingmp3.png" alt="Zing MP3" class="service-logo-img"></div>
-            <input type="text" class="form-input" id="url-zingmp3" placeholder="Zing MP3 URL (Optional)">
+            <input type="text" class="form-input" id="url-zingmp3" placeholder="Zing MP3 URL (Tùy chọn)">
           </div>
         </div>
 
         <div class="form-group">
           <div class="service-input-wrapper">
             <div class="service-logo-box"><img src="https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-nct.png" alt="NhacCuaTui" class="service-logo-img"></div>
-            <input type="text" class="form-input" id="url-nct" placeholder="NhacCuaTui URL (Optional)">
+            <input type="text" class="form-input" id="url-nct" placeholder="NhacCuaTui URL (Tùy chọn)">
           </div>
         </div>
 
@@ -516,7 +539,6 @@
       document.querySelectorAll('.release-item').forEach(el => el.classList.remove('active'));
       element.classList.add('active');
 
-      // Mở rộng layout và hiển thị form chỉnh sửa bên phải
       document.getElementById('setup-layout').classList.add('active-form');
       document.getElementById('update-form-container').classList.add('active');
 
