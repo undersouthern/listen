@@ -5,12 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title id="page-title">loading... - UNDERSOUTHERN</title>
 
-  <!-- Open Graph & Favicon -->
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/undersouthern/my-images/main/logo-black.png">
+  <!-- Dynamic Favicon & Open Graph (dùng ảnh R2 của release) -->
+  <link rel="icon" id="page-favicon" type="image/jpeg" href="data:,">
+  <link rel="apple-touch-icon" id="apple-touch-icon" href="">
   <meta property="og:type" content="music.song">
   <meta property="og:title" id="og-title" content="UNDERSOUTHERN Smart Link">
   <meta property="og:description" content="Distributed by UNDERSOUTHERN">
   <meta property="og:image" id="og-image" content="">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="twitter-title" content="UNDERSOUTHERN Smart Link">
+  <meta name="twitter:image" id="twitter-image" content="">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -361,6 +365,18 @@
       { id: "url_nct", name: "NhacCuaTui", logo: "https://raw.githubusercontent.com/undersouthern/listen/main/assets/logo-nct.png" }
     ];
 
+    function setReleaseFavicon(imageUrl) {
+      const favicon = document.getElementById('page-favicon');
+      if (favicon) {
+        favicon.href = imageUrl;
+      }
+
+      const appleIcon = document.getElementById('apple-touch-icon');
+      if (appleIcon) {
+        appleIcon.href = imageUrl;
+      }
+    }
+
     async function loadReleaseData() {
       // Lấy trực tiếp url_release (slug) từ URL trên trình duyệt
       const pathSegments = window.location.pathname.split("/").filter(Boolean);
@@ -379,10 +395,11 @@
         
         const data = await response.json();
 
-        // 1. Cập nhật tiêu đề trang
+        // 1. Cập nhật tiêu đề trang & meta
         const fullTitle = `${data.title} - UNDERSOUTHERN`;
         document.getElementById('page-title').textContent = fullTitle;
         document.getElementById('og-title').setAttribute('content', fullTitle);
+        document.getElementById('twitter-title').setAttribute('content', fullTitle);
 
         // 2. Tách tên bài hát và nghệ sĩ
         const parts = data.title.split("-").map(p => p.trim());
@@ -398,9 +415,11 @@
           artistEl.style.display = "none";
         }
 
-        // 3. Hiển thị ảnh bìa trực tiếp từ R2 Public Development URL (giữ khung đen sạch sẽ nếu lỗi hoặc chưa có)
+        // 3. Hiển thị ảnh bìa từ R2 và gán trực tiếp làm Favicon + Meta preview
         const coverImg = document.getElementById('track-cover');
         if (data.cover_url && data.cover_url.trim() !== "") {
+          const coverUrl = data.cover_url.trim();
+
           coverImg.onload = function() {
             coverImg.classList.add('loaded');
           };
@@ -408,9 +427,12 @@
             coverImg.src = "";
             coverImg.classList.remove('loaded');
           };
-          coverImg.src = data.cover_url;
-          document.getElementById('bg-ambient').style.backgroundImage = `url(${data.cover_url})`;
-          document.getElementById('og-image').setAttribute('content', data.cover_url);
+          coverImg.src = coverUrl;
+          document.getElementById('bg-ambient').style.backgroundImage = `url("${coverUrl}")`;
+
+          setReleaseFavicon(coverUrl);
+          document.getElementById('og-image').setAttribute('content', coverUrl);
+          document.getElementById('twitter-image').setAttribute('content', coverUrl);
         }
 
         // 4. Render danh sách nền tảng
