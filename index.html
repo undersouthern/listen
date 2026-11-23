@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title id="page-title">loading... - UNDERSOUTHERN</title>
+  <title id="page-title">UNDERSOUTHERN</title>
 
-  <!-- Dynamic Favicon & Open Graph (được Worker HTMLRewriter ghi đè từ D1 & R2) -->
+  <!-- Dynamic Favicon & Open Graph (được Worker HTMLRewriter tự động ghi đè từ D1 & R2) -->
   <link rel="icon" id="page-favicon" type="image/jpeg" href="data:,">
   <link rel="apple-touch-icon" id="apple-touch-icon" href="">
+  <meta name="description" content="Distributed by UNDERSOUTHERN">
+  <meta property="og:site_name" content="UNDERSOUTHERN">
   <meta property="og:type" content="music.song">
   <meta property="og:url" id="og-url" content="">
   <meta property="og:title" id="og-title" content="">
@@ -129,6 +131,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      min-height: 1.4em;
     }
 
     .track-artist-text {
@@ -139,6 +142,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: none;
     }
 
     .distributed-text {
@@ -317,7 +321,7 @@
 
       <!-- Info Bar -->
       <div class="track-info-bar">
-        <div class="track-title-text" id="track-title">loading</div>
+        <div class="track-title-text" id="track-title">&nbsp;</div>
         <div class="track-artist-text" id="track-artist"></div>
         <div class="distributed-text">Music Services</div>
       </div>
@@ -382,7 +386,8 @@
 
     async function loadReleaseData() {
       const pathSegments = window.location.pathname.split("/").filter(Boolean);
-      const urlRelease = pathSegments[pathSegments.length - 1];
+      const rawSegment = pathSegments[pathSegments.length - 1];
+      const urlRelease = rawSegment ? decodeURIComponent(rawSegment) : "";
 
       if (!urlRelease || urlRelease === "index.html") {
         document.getElementById('main-card').innerHTML = '<div class="not-found">Không tìm thấy thông tin release yêu cầu.</div>';
@@ -399,15 +404,26 @@
 
         // 1. Giữ nguyên chuỗi title có dấu "-" từ D1 cho thẻ meta chia sẻ mạng xã hội
         const rawTitle = (data.title || "").trim();
-        document.getElementById('page-title').textContent = `${rawTitle} - UNDERSOUTHERN`;
+        if (rawTitle) {
+          document.getElementById('page-title').textContent = `${rawTitle} - UNDERSOUTHERN`;
+          document.getElementById('og-title').setAttribute('content', rawTitle);
+          document.getElementById('twitter-title').setAttribute('content', rawTitle);
+        }
         document.getElementById('og-url').setAttribute('content', window.location.href);
-        document.getElementById('og-title').setAttribute('content', rawTitle);
-        document.getElementById('twitter-title').setAttribute('content', rawTitle);
 
         // 2. Tách tên bài hát và nghệ sĩ để hiển thị 2 dòng trên giao diện
-        const parts = rawTitle.split("-").map(p => p.trim());
-        const trackTitle = parts[0] || rawTitle;
-        const trackArtist = parts.length > 1 ? parts.slice(1).join(" - ") : "";
+        let trackTitle = rawTitle;
+        let trackArtist = "";
+
+        if (rawTitle.includes(" - ")) {
+          const parts = rawTitle.split(" - ");
+          trackTitle = parts[0].trim();
+          trackArtist = parts.slice(1).join(" - ").trim();
+        } else if (rawTitle.includes("-")) {
+          const parts = rawTitle.split("-").map(p => p.trim());
+          trackTitle = parts[0] || rawTitle;
+          trackArtist = parts.slice(1).join(" - ").trim();
+        }
 
         document.getElementById('track-title').textContent = trackTitle;
         const artistEl = document.getElementById('track-artist');
@@ -418,7 +434,7 @@
           artistEl.style.display = "none";
         }
 
-        // 3. Hiển thị ảnh bìa từ R2 và gán trực tiếp làm Favicon + Meta preview
+        // 3. Hiển thị ảnh bìa trực tiếp từ R2 và dùng làm Favicon + Meta preview
         const coverImg = document.getElementById('track-cover');
         if (data.cover_url && data.cover_url.trim() !== "") {
           const coverUrl = data.cover_url.trim();
@@ -430,6 +446,7 @@
             coverImg.src = "";
             coverImg.classList.remove('loaded');
           };
+          coverImg.alt = rawTitle;
           coverImg.src = coverUrl;
           document.getElementById('bg-ambient').style.backgroundImage = `url("${coverUrl}")`;
 
@@ -466,7 +483,7 @@
 
       } catch (error) {
         console.error(error);
-        document.getElementById('main-card').innerHTML = '<div class="not-found">Không tìm thấy trang hoặc bản release này không tồn tại.</div>';
+        document.getElementById('main-card').innerHTML = '<div class="not-found">The page could not be found, or this release does not exist.</div>';
       }
     }
 
