@@ -5,15 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title id="page-title">loading... - UNDERSOUTHERN</title>
 
-  <!-- Dynamic Favicon & Open Graph (dùng ảnh R2 của release) -->
+  <!-- Dynamic Favicon & Open Graph (được Worker HTMLRewriter ghi đè từ D1 & R2) -->
   <link rel="icon" id="page-favicon" type="image/jpeg" href="data:,">
   <link rel="apple-touch-icon" id="apple-touch-icon" href="">
   <meta property="og:type" content="music.song">
-  <meta property="og:title" id="og-title" content="UNDERSOUTHERN Smart Link">
-  <meta property="og:description" content="Distributed by UNDERSOUTHERN">
+  <meta property="og:url" id="og-url" content="">
+  <meta property="og:title" id="og-title" content="">
+  <meta property="og:description" id="og-description" content="Distributed by UNDERSOUTHERN">
   <meta property="og:image" id="og-image" content="">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" id="twitter-title" content="UNDERSOUTHERN Smart Link">
+  <meta name="twitter:title" id="twitter-title" content="">
+  <meta name="twitter:description" id="twitter-description" content="Distributed by UNDERSOUTHERN">
   <meta name="twitter:image" id="twitter-image" content="">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,7 +84,7 @@
       position: relative;
       width: 100%;
       aspect-ratio: 1 / 1;
-      background-color: #000000; /* Luôn giữ nền đen khi chưa tải ảnh */
+      background-color: #000000;
       overflow: hidden;
     }
 
@@ -292,10 +294,11 @@
     }
 
     .not-found {
-      color: #fff;
+      color: #1a1a1a;
       text-align: center;
-      padding: 40px;
-      font-size: 1rem;
+      padding: 40px 24px;
+      font-size: 0.95rem;
+      font-weight: 500;
     }
   </style>
 </head>
@@ -378,7 +381,6 @@
     }
 
     async function loadReleaseData() {
-      // Lấy trực tiếp url_release (slug) từ URL trên trình duyệt
       const pathSegments = window.location.pathname.split("/").filter(Boolean);
       const urlRelease = pathSegments[pathSegments.length - 1];
 
@@ -388,22 +390,23 @@
       }
 
       try {
-        const response = await fetch(`/api/release/${urlRelease}`);
+        const response = await fetch(`/api/release/${encodeURIComponent(urlRelease)}`);
         if (!response.ok) {
           throw new Error("Không tìm thấy dữ liệu bài hát");
         }
-        
+
         const data = await response.json();
 
-        // 1. Cập nhật tiêu đề trang & meta
-        const fullTitle = `${data.title} - UNDERSOUTHERN`;
-        document.getElementById('page-title').textContent = fullTitle;
-        document.getElementById('og-title').setAttribute('content', fullTitle);
-        document.getElementById('twitter-title').setAttribute('content', fullTitle);
+        // 1. Giữ nguyên chuỗi title có dấu "-" từ D1 cho thẻ meta chia sẻ mạng xã hội
+        const rawTitle = (data.title || "").trim();
+        document.getElementById('page-title').textContent = `${rawTitle} - UNDERSOUTHERN`;
+        document.getElementById('og-url').setAttribute('content', window.location.href);
+        document.getElementById('og-title').setAttribute('content', rawTitle);
+        document.getElementById('twitter-title').setAttribute('content', rawTitle);
 
-        // 2. Tách tên bài hát và nghệ sĩ
-        const parts = data.title.split("-").map(p => p.trim());
-        const trackTitle = parts[0] || data.title;
+        // 2. Tách tên bài hát và nghệ sĩ để hiển thị 2 dòng trên giao diện
+        const parts = rawTitle.split("-").map(p => p.trim());
+        const trackTitle = parts[0] || rawTitle;
         const trackArtist = parts.length > 1 ? parts.slice(1).join(" - ") : "";
 
         document.getElementById('track-title').textContent = trackTitle;
@@ -445,7 +448,7 @@
 
           const row = document.createElement(hasLink ? 'a' : 'div');
           row.className = hasLink ? 'platform-row' : 'platform-row coming-soon';
-          
+
           if (hasLink) {
             row.href = platformUrl;
             row.target = "_blank";
