@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title id="page-title">UNDERSOUTHERN</title>
 
-  <!-- Dynamic Favicon & Open Graph (được Worker HTMLRewriter tự động ghi đè từ D1 & R2) -->
+  <!-- Dynamic Favicon & Open Graph (được Worker tự động ghi đè từ D1 & R2) -->
   <link rel="icon" id="page-favicon" type="image/jpeg" href="data:,">
   <link rel="apple-touch-icon" id="apple-touch-icon" href="">
   <meta name="description" content="Distributed by UNDERSOUTHERN">
@@ -103,24 +103,30 @@
       opacity: 1;
     }
 
-    /* Track Info Bar với thanh phân cách chéo xéo qua trái */
+    /* Track Info Bar */
     .track-info-bar {
       background-color: #2b2b2b;
       color: #ffffff;
       text-align: center;
-      padding: 20px 16px 38px;
+      padding: 20px 16px 22px;
       position: relative;
     }
 
-    .track-info-bar::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 0;
+    /* Phần cắt chéo bằng SVG: sắc nét, không bao giờ lộ thanh ngang 1px */
+    .track-slant {
       width: 100%;
-      height: 28px;
-      background: #ffffff;
-      clip-path: polygon(0 100%, 100% 45%, 100% 100%);
+      height: 16px;
+      background-color: #ffffff;
+      margin-top: -1px;
+      line-height: 0;
+      display: block;
+      overflow: hidden;
+    }
+
+    .track-slant svg {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     .track-title-text {
@@ -326,6 +332,13 @@
         <div class="distributed-text">Music Services</div>
       </div>
 
+      <!-- Cắt chéo bằng SVG không bị hở viền -->
+      <div class="track-slant" aria-hidden="true">
+        <svg viewBox="0 0 100 16" preserveAspectRatio="none">
+          <polygon points="0,0 100,0 0,15" fill="#2b2b2b"></polygon>
+        </svg>
+      </div>
+
       <!-- Platforms List -->
       <div class="platforms-list" id="platforms-list">
         <!-- Render động theo dữ liệu D1 -->
@@ -390,7 +403,7 @@
       const urlRelease = rawSegment ? decodeURIComponent(rawSegment) : "";
 
       if (!urlRelease || urlRelease === "index.html") {
-        document.getElementById('main-card').innerHTML = '<div class="not-found">Không tìm thấy thông tin release yêu cầu.</div>';
+        document.getElementById('main-card').innerHTML = '<div class="not-found">The page could not be found, or this release does not exist.</div>';
         return;
       }
 
