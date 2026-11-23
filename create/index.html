@@ -629,15 +629,30 @@
   </div>
 
   <script>
+    const PUBLIC_BASE_URL = 'https://listen.undersouthern.asia/';
     const coverFileInput = document.getElementById('cover-file-input');
     const previewCoverImg = document.getElementById('preview-cover-img');
     const phoneBgBlur = document.getElementById('phone-bg-blur');
     const uploadFilename = document.getElementById('upload-filename');
     const deleteImgBtn = document.getElementById('delete-img-btn');
     const submitBtn = document.getElementById('submit-btn');
+    const urlSuffixInput = document.getElementById('input-url-suffix');
 
     let compressedCoverFile = null;
     let isProcessingImage = false;
+
+    // Chuẩn hóa slug nhập vào ô Public URL (bỏ domain thừa, dấu "/" đầu/cuối, khoảng trắng)
+    function normalizeUrlSlug(value) {
+      return (value || '')
+        .trim()
+        .replace(/^https?:\/\/listen\.undersouthern\.asia\/?/i, '')
+        .replace(/^\/+|\/+$/g, '')
+        .replace(/\s+/g, '-');
+    }
+
+    urlSuffixInput.addEventListener('blur', function() {
+      this.value = normalizeUrlSlug(this.value);
+    });
 
     // Hàm xuất canvas ra JPEG Blob với mức chất lượng chỉ định
     function canvasToJpegBlob(canvas, quality) {
@@ -688,7 +703,7 @@
         canvas.width = width;
         canvas.height = height;
 
-        // Phủ nền đen/trắng trước khi xuất JPEG (tránh lỗi nền trong suốt từ PNG/WebP)
+        // Phủ nền đen trước khi xuất JPEG (tránh lỗi nền trong suốt từ PNG/WebP)
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, width, height);
         ctx.imageSmoothingEnabled = true;
@@ -728,7 +743,7 @@
 
           if (blob.size <= maxBytes) {
             bestInRange = blob;
-            low = mid; // Thử tăng quality lên gần sát 150KB nhất có thể
+            low = mid;
             if (blob.size >= minBytes && blob.size >= maxBytes * 0.92) {
               break;
             }
@@ -870,7 +885,7 @@
       }
     });
 
-    // Xử lý gửi request POST tạo release page qua API Worker
+    // Xử lý gửi request POST tạo release page qua API Worker và tự động chuyển thẳng sang Public URL mới
     document.getElementById('smartlink-form').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -884,27 +899,38 @@
         return;
       }
 
+      const cleanSlug = normalizeUrlSlug(urlSuffixInput.value);
+      urlSuffixInput.value = cleanSlug;
+
+      if (!cleanSlug) {
+        alert('Vui lòng nhập Public URL!');
+        urlSuffixInput.focus();
+        return;
+      }
+
       submitBtn.textContent = 'Creating...';
       submitBtn.disabled = true;
 
       const formData = new FormData();
-      formData.append('title', document.getElementById('input-title').value);
-      formData.append('url_release', document.getElementById('input-url-suffix').value);
-      formData.append('id_title', document.getElementById('input-url-suffix').value);
+      formData.append('title', titleInput.value.trim());
+      formData.append('url_release', cleanSlug);
+      formData.append('id_title', cleanSlug);
 
       // Thu thập link các nền tảng (nếu bỏ trống thì gửi chuỗi rỗng)
-      formData.append('url_spotify', document.getElementById('url-spotify').value);
-      formData.append('url_apple_music_music', document.getElementById('url-apple-music').value);
-      formData.append('url_amazon_music', document.getElementById('url-amazon-music').value);
-      formData.append('url_soundcloud', document.getElementById('url-soundcloud').value);
-      formData.append('url_deezer', document.getElementById('url-deezer').value);
-      formData.append('url_youtube', document.getElementById('url-youtube').value);
-      formData.append('url_youtube_music', document.getElementById('url-youtube-music').value);
-      formData.append('url_zingmp3', document.getElementById('url-zingmp3').value);
-      formData.append('url_nct', document.getElementById('url-nct').value);
+      formData.append('url_spotify', document.getElementById('url-spotify').value.trim());
+      formData.append('url_apple_music_music', document.getElementById('url-apple-music').value.trim());
+      formData.append('url_amazon_music', document.getElementById('url-amazon-music').value.trim());
+      formData.append('url_soundcloud', document.getElementById('url-soundcloud').value.trim());
+      formData.append('url_deezer', document.getElementById('url-deezer').value.trim());
+      formData.append('url_youtube', document.getElementById('url-youtube').value.trim());
+      formData.append('url_youtube_music', document.getElementById('url-youtube-music').value.trim());
+      formData.append('url_zingmp3', document.getElementById('url-zingmp3').value.trim());
+      formData.append('url_nct', document.getElementById('url-nct').value.trim());
 
       // Gửi ảnh JPEG đã tự động nén (100KB - 150KB)
       formData.append('cover_image', compressedCoverFile);
+
+      let isRedirecting = false;
 
       try {
         const response = await fetch('/api/create', {
@@ -914,8 +940,10 @@
 
         const result = await response.json();
         if (response.ok && result.success) {
-          alert('Your Smart Link is ready!');
-          window.location.href = `https://listen.undersouthern.asia/${result.url_release}`;
+          const finalSlug = normalizeUrlSlug(result.url_release || cleanSlug);
+          isRedirecting = true;
+          submitBtn.textContent = 'Redirecting...';
+          window.location.href = `${PUBLIC_BASE_URL}${encodeURIComponent(finalSlug)}`;
         } else {
           alert('Lỗi: ' + (result.error || 'Unable to Create Smart Link!'));
         }
@@ -923,8 +951,10 @@
         console.error(err);
         alert('Đã xảy ra lỗi kết nối hệ thống!');
       } finally {
-        submitBtn.textContent = 'Create';
-        submitBtn.disabled = false;
+        if (!isRedirecting) {
+          submitBtn.textContent = 'Create';
+          submitBtn.disabled = false;
+        }
       }
     });
   </script>
