@@ -88,7 +88,7 @@ export default {
             const existing = await env.DB.prepare(
               "SELECT id_title FROM landing_page WHERE id_title = ? OR url_release = ?"
             ).bind(uniqueCode, uniqueCode).first();
-            
+
             if (!existing) {
               isDuplicate = false;
             }
@@ -113,15 +113,15 @@ export default {
         if (coverImage && typeof coverImage === "object" && coverImage.size > 0) {
           const safeName = coverImage.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
           const fileName = `covers/${Date.now()}-${safeName}`;
-          
+
           const arrayBuffer = await coverImage.arrayBuffer();
           await env.MY_BUCKET.put(fileName, arrayBuffer, {
-            httpMetadata: { 
+            httpMetadata: {
               contentType: coverImage.type,
               cacheControl: "public, max-age=31536000, immutable"
             }
           });
-          
+
           const r2PublicDomain = "https://pub-3e105cf90fc140c484fbb8ece9b4271b.r2.dev";
           cover_url = `${r2PublicDomain}/${fileName}`;
         }
@@ -139,6 +139,10 @@ export default {
           url_soundcloud, url_deezer, url_youtube,
           url_youtube_music, url_zingmp3, url_nct, url_release
         ).run();
+
+        // Xóa cache HTML cũ nếu slug từng bị truy cập trước khi tạo
+        const pageCacheUrl = `${url.origin}/${encodeURIComponent(url_release)}`;
+        await cache.delete(new Request(pageCacheUrl));
 
         return new Response(JSON.stringify({ success: true, url_release }), {
           headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
@@ -170,10 +174,10 @@ export default {
         const { results } = await env.DB.prepare(query).bind(...params).all();
 
         return new Response(JSON.stringify(results || []), {
-          headers: { 
-            "Content-Type": "application/json; charset=UTF-8", 
+          headers: {
+            "Content-Type": "application/json; charset=UTF-8",
             "Access-Control-Allow-Origin": "*",
-            "Cache-Control": "no-store" 
+            "Cache-Control": "no-store"
           }
         });
       } catch (err) {
@@ -186,7 +190,7 @@ export default {
 
     // 5. Xử lý API lấy thông tin bài hát theo slug (/api/release/:slug) - Tích hợp Cloudflare Edge Cache + Indexing
     if (request.method === "GET" && pathname.startsWith("/api/release/")) {
-      const slug = pathname.split("/").pop();
+      const slug = decodeURIComponent(pathname.split("/").pop());
       const cacheKey = new Request(url.toString(), request);
 
       // Kiểm tra xem dữ liệu bài hát đã có sẵn trong Edge Cache chưa
@@ -209,8 +213,8 @@ export default {
         }
 
         const response = new Response(JSON.stringify(record), {
-          headers: { 
-            "Content-Type": "application/json; charset=UTF-8", 
+          headers: {
+            "Content-Type": "application/json; charset=UTF-8",
             "Access-Control-Allow-Origin": "*",
             "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
           }
@@ -241,10 +245,10 @@ export default {
         });
       }
 
-      const slug = pathname.split("/").pop();
+      const slug = decodeURIComponent(pathname.split("/").pop());
       try {
         const formData = await request.formData();
-        
+
         const title = formData.get("title");
         const url_spotify = formData.get("url_spotify");
         const url_apple_music_music = formData.get("url_apple_music_music");
@@ -263,15 +267,15 @@ export default {
         if (coverImage && typeof coverImage === "object" && coverImage.size > 0) {
           const safeName = coverImage.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
           const fileName = `covers/${Date.now()}-${safeName}`;
-          
+
           const arrayBuffer = await coverImage.arrayBuffer();
           await env.MY_BUCKET.put(fileName, arrayBuffer, {
-            httpMetadata: { 
+            httpMetadata: {
               contentType: coverImage.type,
               cacheControl: "public, max-age=31536000, immutable"
             }
           });
-          
+
           const r2PublicDomain = "https://pub-3e105cf90fc140c484fbb8ece9b4271b.r2.dev";
           const cover_url = `${r2PublicDomain}/${fileName}`;
 
@@ -310,9 +314,13 @@ export default {
 
         await env.DB.prepare(updateQuery).bind(...bindParams).run();
 
-        // Xóa ngay lập tức bản cache cũ của bài hát này trên Cloudflare Edge
-        const releaseCacheUrl = new URL(`/api/release/${slug}`, request.url).toString();
-        await cache.delete(new Request(releaseCacheUrl));
+        // Xóa ngay lập tức bản cache API và cache HTML landing page của bài hát này trên Cloudflare Edge
+        const releaseCacheUrl = new URL(`/api/release/${encodeURIComponent(slug)}`, request.url).toString();
+        const pageCacheUrl = `${url.origin}/${encodeURIComponent(slug)}`;
+        await Promise.all([
+          cache.delete(new Request(releaseCacheUrl)),
+          cache.delete(new Request(pageCacheUrl))
+        ]);
 
         return new Response(JSON.stringify({ success: true, url_release: slug }), {
           headers: { "Content-Type": "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" }
@@ -325,12 +333,22 @@ export default {
       }
     }
 
-    // 7. Định tuyến file tĩnh từ GitHub repository (Kèm Cloudflare Cache cho file tĩnh)
+    // 7. Định tuyến file tĩnh từ GitHub repository (Kèm SSR Meta Open Graph cho trang /:slug)
+    let releaseSlug = null;
+
     if (pathname === "/" || pathname === "" || pathname === "/dashboard" || pathname === "/dashboard/") {
       pathname = "/dashboard/index.html";
     } else {
       const pathSegments = pathname.split("/").filter(Boolean);
-      if (pathSegments.length === 1 && pathSegments[0] !== "create" && pathSegments[0] !== "update" && pathSegments[0] !== "dashboard" && pathSegments[0] !== "signin" && !pathSegments[0].includes(".")) {
+      if (
+        pathSegments.length === 1 &&
+        pathSegments[0] !== "create" &&
+        pathSegments[0] !== "update" &&
+        pathSegments[0] !== "dashboard" &&
+        pathSegments[0] !== "signin" &&
+        !pathSegments[0].includes(".")
+      ) {
+        releaseSlug = decodeURIComponent(pathSegments[0]);
         pathname = "/index.html";
       }
     }
@@ -351,6 +369,107 @@ export default {
       pathname = "/" + pathname;
     }
 
+    // Xử lý riêng cho Landing Page /:slug -> Inject trực tiếp Title (có dấu "-") và ảnh R2 từ D1 vào HTML
+    if (releaseSlug && request.method === "GET") {
+      const pageCacheKey = new Request(`${url.origin}/${encodeURIComponent(releaseSlug)}`);
+      const cachedPage = await cache.match(pageCacheKey);
+      if (cachedPage) {
+        return cachedPage;
+      }
+
+      const githubRawUrl = `https://raw.githubusercontent.com/undersouthern/listen/main/index.html`;
+
+      // Chạy song song việc tải index.html và truy vấn D1 để tối ưu tốc độ phản hồi
+      const [htmlResponse, record] = await Promise.all([
+        fetch(githubRawUrl, {
+          headers: { "User-Agent": "Cloudflare-Worker" },
+          cf: { cacheTtl: 300, cacheEverything: true }
+        }),
+        env.DB.prepare(
+          "SELECT title, cover_url FROM landing_page WHERE url_release = ? LIMIT 1"
+        ).bind(releaseSlug).first().catch(() => null)
+      ]);
+
+      if (!htmlResponse.ok) {
+        return new Response(`File not found: /index.html`, {
+          status: 404,
+          headers: { "Content-Type": "text/plain; charset=UTF-8" }
+        });
+      }
+
+      const pageHeaders = new Headers({
+        "Content-Type": "text/html; charset=UTF-8",
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": record ? "public, max-age=300, s-maxage=3600" : "no-store"
+      });
+
+      if (!record) {
+        return new Response(htmlResponse.body, { status: 200, headers: pageHeaders });
+      }
+
+      const trackTitle = (record.title || "").trim();
+      const coverUrl = (record.cover_url || "").trim();
+      const canonicalUrl = `${url.origin}/${encodeURIComponent(releaseSlug)}`;
+
+      const rewritten = new HTMLRewriter()
+        .on("title", {
+          element(el) {
+            if (trackTitle) el.setInnerContent(`${trackTitle} - UNDERSOUTHERN`);
+          }
+        })
+        .on('meta[property="og:url"]', {
+          element(el) {
+            el.setAttribute("content", canonicalUrl);
+          }
+        })
+        .on('meta[property="og:title"]', {
+          element(el) {
+            if (trackTitle) el.setAttribute("content", trackTitle);
+          }
+        })
+        .on('meta[name="twitter:title"]', {
+          element(el) {
+            if (trackTitle) el.setAttribute("content", trackTitle);
+          }
+        })
+        .on('meta[property="og:image"]', {
+          element(el) {
+            if (coverUrl) el.setAttribute("content", coverUrl);
+          }
+        })
+        .on('meta[name="twitter:image"]', {
+          element(el) {
+            if (coverUrl) el.setAttribute("content", coverUrl);
+          }
+        })
+        .on('link[rel="icon"]', {
+          element(el) {
+            if (coverUrl) {
+              el.setAttribute("href", coverUrl);
+              el.setAttribute("type", "image/jpeg");
+            }
+          }
+        })
+        .on('link[rel="apple-touch-icon"]', {
+          element(el) {
+            if (coverUrl) el.setAttribute("href", coverUrl);
+          }
+        })
+        .transform(new Response(htmlResponse.body, { status: 200, headers: pageHeaders }));
+
+      const finalHtml = await rewritten.text();
+      const finalResponse = new Response(finalHtml, { status: 200, headers: pageHeaders });
+
+      if (ctx && ctx.waitUntil) {
+        ctx.waitUntil(cache.put(pageCacheKey, finalResponse.clone()));
+      } else {
+        await cache.put(pageCacheKey, finalResponse.clone());
+      }
+
+      return finalResponse;
+    }
+
+    // Các file tĩnh khác (/dashboard, /create, /update, /signin, css, js, assets...)
     const githubRawUrl = `https://raw.githubusercontent.com/undersouthern/listen/main${pathname}`;
 
     const response = await fetch(githubRawUrl, {
@@ -362,7 +481,7 @@ export default {
     });
 
     if (!response.ok) {
-      return new Response(`File not found: ${pathname}`, { 
+      return new Response(`File not found: ${pathname}`, {
         status: 404,
         headers: { "Content-Type": "text/plain; charset=UTF-8" }
       });
