@@ -112,6 +112,13 @@
       color: #333;
       transition: border-color 0.15s;
       flex: 1;
+      overflow: hidden;
+    }
+
+    .upload-box-small span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .upload-box-small:hover {
@@ -233,8 +240,13 @@
       transition: background 0.15s;
     }
 
-    .save-btn:hover {
+    .save-btn:hover:not(:disabled) {
       background: #6d28d9;
+    }
+
+    .save-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
     }
 
     /* Right Column: Phone Preview Frame */
@@ -479,7 +491,7 @@
         <div class="form-group">
           <div class="image-upload-row">
             <label class="upload-box-small">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <svg width="16" height="16" style="flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               <span id="upload-filename">Choose Cover Image</span>
               <input type="file" id="cover-file-input" accept="image/*" required>
             </label>
@@ -622,23 +634,185 @@
     const phoneBgBlur = document.getElementById('phone-bg-blur');
     const uploadFilename = document.getElementById('upload-filename');
     const deleteImgBtn = document.getElementById('delete-img-btn');
+    const submitBtn = document.getElementById('submit-btn');
 
-    coverFileInput.addEventListener('change', function(e) {
+    let compressedCoverFile = null;
+    let isProcessingImage = false;
+
+    // Hàm xuất canvas ra JPEG Blob với mức chất lượng chỉ định
+    function canvasToJpegBlob(canvas, quality) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Canvas conversion failed'));
+          },
+          'image/jpeg',
+          quality
+        );
+      });
+    }
+
+    // Tự động chuyển đổi & nén ảnh sang JPEG trong khoảng 100KB - 150KB
+    async function compressImageToJpeg(file, minKB = 100, maxKB = 150) {
+      const minBytes = minKB * 1024;
+      const maxBytes = maxKB * 1024;
+
+      const objectUrl = URL.createObjectURL(file);
+      let img;
+
+      try {
+        img = await new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => reject(new Error('Không thể đọc file ảnh'));
+          image.src = objectUrl;
+        });
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const drawAtMaxDim = (maxDim) => {
+        let width = img.naturalWidth;
+        let height = img.naturalHeight;
+
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.max(1, Math.round(width * ratio));
+          height = Math.max(1, Math.round(height * ratio));
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Phủ nền đen/trắng trước khi xuất JPEG (tránh lỗi nền trong suốt từ PNG/WebP)
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, width, height);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+      };
+
+      let maxDim = 1200;
+      let finalBlob = null;
+
+      // Vòng lặp giảm dần kích thước nếu ảnh quá nhiều chi tiết mà ở mức quality tốt vẫn > 150KB
+      while (maxDim >= 400) {
+        drawAtMaxDim(maxDim);
+
+        // Thử ở chất lượng cao trước (0.92)
+        const highBlob = await canvasToJpegBlob(canvas, 0.92);
+
+        if (highBlob.size <= maxBytes) {
+          if (highBlob.size >= minBytes) {
+            finalBlob = highBlob;
+            break;
+          }
+          // Nếu nhẹ hơn 100KB, thử tăng lên 0.96 để lấy độ nét cao nhất trong giới hạn <= 150KB
+          const maxQualityBlob = await canvasToJpegBlob(canvas, 0.96);
+          finalBlob = maxQualityBlob.size <= maxBytes ? maxQualityBlob : highBlob;
+          break;
+        }
+
+        // Dùng Binary Search dò quality tối ưu trong khoảng [0.45, 0.92] để đạt gần 100KB - 150KB nhất
+        let low = 0.45;
+        let high = 0.92;
+        let bestInRange = null;
+
+        for (let i = 0; i < 7; i++) {
+          const mid = (low + high) / 2;
+          const blob = await canvasToJpegBlob(canvas, mid);
+
+          if (blob.size <= maxBytes) {
+            bestInRange = blob;
+            low = mid; // Thử tăng quality lên gần sát 150KB nhất có thể
+            if (blob.size >= minBytes && blob.size >= maxBytes * 0.92) {
+              break;
+            }
+          } else {
+            high = mid;
+          }
+        }
+
+        if (bestInRange) {
+          finalBlob = bestInRange;
+          break;
+        }
+
+        // Nếu ngay cả quality 0.45 vẫn > 150KB thì hạ độ phân giải xuống 85% rồi lặp lại
+        maxDim = Math.round(maxDim * 0.85);
+      }
+
+      // Fallback cuối cùng (trường hợp ảnh cực kỳ nhiễu/nhiều chi tiết)
+      if (!finalBlob) {
+        drawAtMaxDim(400);
+        let low = 0.1;
+        let high = 0.45;
+        let bestFallback = await canvasToJpegBlob(canvas, 0.1);
+
+        for (let i = 0; i < 6; i++) {
+          const mid = (low + high) / 2;
+          const blob = await canvasToJpegBlob(canvas, mid);
+          if (blob.size <= maxBytes) {
+            bestFallback = blob;
+            low = mid;
+          } else {
+            high = mid;
+          }
+        }
+        finalBlob = bestFallback;
+      }
+
+      const baseName = file.name.replace(/\.[^/.]+$/, '') || 'cover';
+      return new File([finalBlob], `${baseName}.jpg`, {
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      });
+    }
+
+    coverFileInput.addEventListener('change', async function(e) {
       const file = e.target.files[0];
-      if (file) {
+      if (!file) return;
+
+      isProcessingImage = true;
+      submitBtn.disabled = true;
+      uploadFilename.textContent = 'Converting to JPEG...';
+
+      try {
+        const jpegFile = await compressImageToJpeg(file, 100, 150);
+        compressedCoverFile = jpegFile;
+
+        const sizeKB = Math.round(jpegFile.size / 1024);
+        uploadFilename.textContent = `${jpegFile.name} (${sizeKB} KB)`;
+        deleteImgBtn.classList.add('show');
+
         const reader = new FileReader();
         reader.onload = function(event) {
           previewCoverImg.src = event.target.result;
           phoneBgBlur.style.backgroundImage = `url(${event.target.result})`;
-          uploadFilename.textContent = file.name;
-          deleteImgBtn.classList.add('show');
-        }
-        reader.readAsDataURL(file);
+        };
+        reader.readAsDataURL(jpegFile);
+      } catch (err) {
+        console.error(err);
+        alert('Không thể xử lý ảnh này. Vui lòng chọn ảnh khác!');
+        coverFileInput.value = '';
+        compressedCoverFile = null;
+        previewCoverImg.src = '';
+        phoneBgBlur.style.backgroundImage = 'none';
+        uploadFilename.textContent = 'Choose Cover Image';
+        deleteImgBtn.classList.remove('show');
+      } finally {
+        isProcessingImage = false;
+        submitBtn.disabled = false;
       }
     });
 
     deleteImgBtn.addEventListener('click', function() {
       coverFileInput.value = '';
+      compressedCoverFile = null;
       previewCoverImg.src = '';
       phoneBgBlur.style.backgroundImage = 'none';
       uploadFilename.textContent = 'Choose Cover Image';
@@ -700,7 +874,16 @@
     document.getElementById('smartlink-form').addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      const submitBtn = document.getElementById('submit-btn');
+      if (isProcessingImage) {
+        alert('Ảnh đang được nén, vui lòng chờ giây lát!');
+        return;
+      }
+
+      if (!compressedCoverFile) {
+        alert('Vui lòng chọn ảnh bìa!');
+        return;
+      }
+
       submitBtn.textContent = 'Creating...';
       submitBtn.disabled = true;
 
@@ -720,10 +903,8 @@
       formData.append('url_zingmp3', document.getElementById('url-zingmp3').value);
       formData.append('url_nct', document.getElementById('url-nct').value);
 
-      const imageFile = coverFileInput.files[0];
-      if (imageFile) {
-        formData.append('cover_image', imageFile);
-      }
+      // Gửi ảnh JPEG đã tự động nén (100KB - 150KB)
+      formData.append('cover_image', compressedCoverFile);
 
       try {
         const response = await fetch('/api/create', {
